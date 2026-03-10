@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 获取数据库连接 URL
-DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:root@localhost:3306/dtn_tool")
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://root:root@localhost:3306/auto_tool")
 
 # 创建数据库引擎
 engine = create_engine(DATABASE_URL)
