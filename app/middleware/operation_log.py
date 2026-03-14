@@ -6,9 +6,7 @@ import time
 from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
 from app.models.operation_log import OperationLog
 
 
@@ -130,17 +128,12 @@ class OperationLogMiddleware(BaseHTTPMiddleware):
         finally:
             # 记录操作日志到数据库
             try:
-                db = SessionLocal()
-                log_entry = OperationLog(**log_data)
+                log_entry = await OperationLog.create(**log_data)
                 if error_message:
                     log_entry.error_message = error_message
-                db.add(log_entry)
-                db.commit()
+                    await log_entry.save()
             except Exception as log_error:
                 print(f'记录操作日志失败: {log_error}')
-                db.rollback()
-            finally:
-                db.close()
 
 
 # 提供一个装饰器函数，用于手动标记需要记录日志的函数

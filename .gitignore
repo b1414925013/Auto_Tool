@@ -46,6 +46,7 @@ Thumbs.db
 
 # 虚拟环境
 venv/
+venv38/
 env/
 ENV/
 .venv/

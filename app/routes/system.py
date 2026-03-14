@@ -1,13 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer
-from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 import os
 from dotenv import load_dotenv
-from app.database import get_db
 from app.models.user import User as UserModel
 from app.schemas.user import User, UserCreate, UserUpdate, UserLogin, Token
 
@@ -46,7 +44,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 # 获取当前用户信息
-def get_current_user(token: str = Depends(HTTPBearer()), db: Session = Depends(get_db)):
+async def get_current_user(token: str = Depends(HTTPBearer())):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -61,7 +59,7 @@ def get_current_user(token: str = Depends(HTTPBearer()), db: Session = Depends(g
         raise credentials_exception
     
     # 从数据库获取用户信息
-    user = db.query(UserModel).filter(UserModel.username == username).first()
+    user = await UserModel.filter(username=username).first()
     if user is None:
         raise credentials_exception
     
@@ -69,28 +67,26 @@ def get_current_user(token: str = Depends(HTTPBearer()), db: Session = Depends(g
 
 # 获取所有用户
 @router.get("/users", response_model=List[User])
-def get_users(
+async def get_users(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db)
 ):
-    users = db.query(UserModel).offset(skip).limit(limit).all()
+    users = await UserModel.all().offset(skip).limit(limit)
     return users
 
 # 获取当前用户信息
 @router.get("/users/me", response_model=User)
-def get_me(
+async def get_me(
     current_user: UserModel = Depends(get_current_user)
 ):
     return current_user
 
 # 根据 ID 获取用户
 @router.get("/users/{user_id}", response_model=User)
-def get_user(
+async def get_user(
     user_id: int,
-    db: Session = Depends(get_db)
 ):
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    user = await UserModel.filter(id=user_id).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -100,13 +96,12 @@ def get_user(
 
 # 新增用户
 @router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
-def create_user(
+async def create_user(
     user: UserCreate,
-    db: Session = Depends(get_db)
 ):
     # 检查用户名是否已存在
-    existing_user = db.query(UserModel).filter(
-        UserModel.username == user.username
+    existing_user = await UserModel.filter(
+        username=user.username
     ).first()
     if existing_user:
         raise HTTPException(
@@ -115,8 +110,8 @@ def create_user(
         )
     
     # 检查邮箱是否已存在
-    existing_email = db.query(UserModel).filter(
-        UserModel.email == user.email
+    existing_email = await UserModel.filter(
+        email=user.email
     ).first()
     if existing_email:
         raise HTTPException(
@@ -130,26 +125,22 @@ def create_user(
     if len(password) > 72:
         password = password[:72]
     hashed_password = get_password_hash(password)
-    db_user = UserModel(
+    db_user = await UserModel.create(
         username=user.username,
         email=user.email,
         password_hash=hashed_password,
         full_name=user.full_name,
         role=user.role
     )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
     return db_user
 
 # 更新用户
 @router.put("/users/{user_id}", response_model=User)
-def update_user(
+async def update_user(
     user_id: int,
     user_update: UserUpdate,
-    db: Session = Depends(get_db)
 ):
-    db_user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    db_user = await UserModel.filter(id=user_id).first()
     if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -158,8 +149,8 @@ def update_user(
     
     # 检查邮箱是否已被其他用户使用
     if user_update.email and user_update.email != db_user.email:
-        existing_email = db.query(UserModel).filter(
-            UserModel.email == user_update.email
+        existing_email = await UserModel.filter(
+            email=user_update.email
         ).first()
         if existing_email:
             raise HTTPException(
@@ -178,38 +169,32 @@ def update_user(
             password = password[:72]
         update_data["password_hash"] = get_password_hash(password)
     
-    for field, value in update_data.items():
-        setattr(db_user, field, value)
-    
-    db.commit()
-    db.refresh(db_user)
+    await db_user.update_from_dict(update_data)
+    await db_user.save()
     return db_user
 
 # 删除用户
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(
+async def delete_user(
     user_id: int,
-    db: Session = Depends(get_db)
 ):
-    db_user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    db_user = await UserModel.filter(id=user_id).first()
     if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"User with id {user_id} not found"
         )
     
-    db.delete(db_user)
-    db.commit()
+    await db_user.delete()
     return None
 
 # 用户登录
 @router.post("/login", response_model=Token)
-def login(
+async def login(
     user_login: UserLogin,
-    db: Session = Depends(get_db)
 ):
     # 查找用户
-    user = db.query(UserModel).filter(UserModel.username == user_login.username).first()
+    user = await UserModel.filter(username=user_login.username).first()
     if not user or not verify_password(user_login.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

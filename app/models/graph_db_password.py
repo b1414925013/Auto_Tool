@@ -1,13 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
-from app.database import Base
+from tortoise import fields, models
+from datetime import datetime
 
-class GraphDBPassword(Base):
-    __tablename__ = "graph_db_passwords"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    environment = Column(String(50), nullable=False, index=True)  # 环境名称
-    password = Column(String(255), nullable=False)  # 密码
-    description = Column(String(255), nullable=True)  # 描述
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+class GraphDBPassword(models.Model):
+    """图数据库密码模型"""
+    id = fields.IntField(pk=True, index=True)
+    environment = fields.CharField(max_length=50, null=False, index=True)  # 环境名称
+    password = fields.CharField(max_length=255, null=False)  # 密码
+    description = fields.CharField(max_length=255, null=True)  # 描述
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        table = "graph_db_passwords"
