@@ -1,13 +1,15 @@
+import os
+from datetime import datetime, timedelta
+from typing import List
+
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer
-from typing import List
-from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import os
-from dotenv import load_dotenv
+
 from app.models.user import User as UserModel
-from app.schemas.user import User, UserCreate, UserUpdate, UserLogin, Token
+from app.schemas.user import Token, User, UserCreate, UserLogin, UserUpdate
 
 # 加载环境变量
 load_dotenv()
@@ -22,15 +24,18 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
+
 # 密码加密
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
 
 def get_password_hash(password):
     # 确保密码长度不超过72字节
     if len(password) > 72:
         password = password[:72]
     return pwd_context.hash(password)
+
 
 # 创建访问令牌
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -42,6 +47,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 # 获取当前用户信息
 async def get_current_user(token: str = Depends(HTTPBearer())):
@@ -57,13 +63,14 @@ async def get_current_user(token: str = Depends(HTTPBearer())):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    
+
     # 从数据库获取用户信息
     user = await UserModel.filter(username=username).first()
     if user is None:
         raise credentials_exception
-    
+
     return user
+
 
 # 获取所有用户
 @router.get("/users", response_model=List[User])
@@ -74,12 +81,12 @@ async def get_users(
     users = await UserModel.all().offset(skip).limit(limit)
     return users
 
+
 # 获取当前用户信息
 @router.get("/users/me", response_model=User)
-async def get_me(
-    current_user: UserModel = Depends(get_current_user)
-):
+async def get_me(current_user: UserModel = Depends(get_current_user)):
     return current_user
+
 
 # 根据 ID 获取用户
 @router.get("/users/{user_id}", response_model=User)
@@ -90,9 +97,10 @@ async def get_user(
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
+            detail=f"User with id {user_id} not found",
         )
     return user
+
 
 # 新增用户
 @router.post("/users", response_model=User, status_code=status.HTTP_201_CREATED)
@@ -100,25 +108,21 @@ async def create_user(
     user: UserCreate,
 ):
     # 检查用户名是否已存在
-    existing_user = await UserModel.filter(
-        username=user.username
-    ).first()
+    existing_user = await UserModel.filter(username=user.username).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"User with username '{user.username}' already exists"
+            detail=f"User with username '{user.username}' already exists",
         )
-    
+
     # 检查邮箱是否已存在
-    existing_email = await UserModel.filter(
-        email=user.email
-    ).first()
+    existing_email = await UserModel.filter(email=user.email).first()
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"User with email '{user.email}' already exists"
+            detail=f"User with email '{user.email}' already exists",
         )
-    
+
     # 创建新用户
     # 截断密码长度，bcrypt最多支持72字节
     password = user.password
@@ -130,9 +134,10 @@ async def create_user(
         email=user.email,
         password_hash=hashed_password,
         full_name=user.full_name,
-        role=user.role
+        role=user.role,
     )
     return db_user
+
 
 # 更新用户
 @router.put("/users/{user_id}", response_model=User)
@@ -144,23 +149,21 @@ async def update_user(
     if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
+            detail=f"User with id {user_id} not found",
         )
-    
+
     # 检查邮箱是否已被其他用户使用
     if user_update.email and user_update.email != db_user.email:
-        existing_email = await UserModel.filter(
-            email=user_update.email
-        ).first()
+        existing_email = await UserModel.filter(email=user_update.email).first()
         if existing_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"User with email '{user_update.email}' already exists"
+                detail=f"User with email '{user_update.email}' already exists",
             )
-    
+
     # 更新用户信息
     update_data = user_update.model_dump(exclude_unset=True)
-    
+
     # 处理密码更新
     if "password" in update_data:
         # 截断密码长度，bcrypt最多支持72字节
@@ -168,10 +171,11 @@ async def update_user(
         if len(password) > 72:
             password = password[:72]
         update_data["password_hash"] = get_password_hash(password)
-    
+
     await db_user.update_from_dict(update_data)
     await db_user.save()
     return db_user
+
 
 # 删除用户
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -182,11 +186,12 @@ async def delete_user(
     if db_user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
+            detail=f"User with id {user_id} not found",
         )
-    
+
     await db_user.delete()
     return None
+
 
 # 用户登录
 @router.post("/login", response_model=Token)
@@ -201,11 +206,11 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     # 创建访问令牌
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}

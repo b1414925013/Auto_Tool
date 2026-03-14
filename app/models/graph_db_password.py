@@ -1,8 +1,9 @@
 from tortoise import fields, models
-from datetime import datetime
+
 
 class GraphDBPassword(models.Model):
     """图数据库密码模型"""
+
     id = fields.IntField(pk=True, index=True)
     environment = fields.CharField(max_length=50, null=False, index=True)  # 环境名称
     password = fields.CharField(max_length=255, null=False)  # 密码

@@ -1,10 +1,12 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel
 
 
 class OperationLogBase(BaseModel):
     """操作日志基础模型"""
+
     operation_type: str
     operation_desc: str
     username: Optional[str] = None
@@ -18,13 +20,15 @@ class OperationLogBase(BaseModel):
 
 class OperationLogCreate(OperationLogBase):
     """创建操作日志模型"""
+
     pass
 
 
 class OperationLogResponse(OperationLogBase):
     """操作日志响应模型"""
+
     id: int
     created_at: datetime
-    
+
     class Config:
         from_attributes = True

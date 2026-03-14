@@ -1,8 +1,9 @@
 from tortoise import fields, models
-from datetime import datetime
+
 
 class User(models.Model):
     """用户模型"""
+
     id = fields.IntField(pk=True, index=True)
     username = fields.CharField(max_length=50, unique=True, index=True, null=False)
     email = fields.CharField(max_length=100, unique=True, index=True, null=False)
