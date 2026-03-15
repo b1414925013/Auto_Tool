@@ -19,6 +19,8 @@ from btools.core.media.colorutils import ColorUtils
 from btools.core.basic.convertutils import Converter
 from btools.core.data.datetimeutils import DateTimeUtils
 from btools.core.basic.randomutils import RandomUtil
+from btools.core.network.netutils import NetUtils
+from btools.core.system.platformutils import PlatformUtils
 
 router = APIRouter()
 
@@ -206,13 +208,19 @@ async def get_system_info():
             "data": {
                 "app_name": "Auto_Tool",
                 "app_version": "1.0.0",
-                "python_version": f"{sys.version_info.major}.{sys.version_info.minor}",
+                "python_version": PlatformUtils.get_python_version(),
                 "fastapi_version": fastapi.__version__,
                 "db_status": "已连接" if db_connected else "未连接",
                 "db_status_color": "text-success" if db_connected else "text-danger",
                 "last_update": current_time,
-                "platform": platform.system(),
-                "architecture": platform.architecture()[0],
+                "platform": PlatformUtils.get_os(),
+                "platform_version": PlatformUtils.get_os_version(),
+                "architecture": PlatformUtils.get_architecture()[0],
+                "machine": PlatformUtils.get_machine(),
+                "processor": PlatformUtils.get_processor(),
+                "is_windows": PlatformUtils.is_windows(),
+                "is_linux": PlatformUtils.is_linux(),
+                "is_macos": PlatformUtils.is_macos(),
             },
         }
     except Exception as e:
@@ -228,7 +236,13 @@ async def get_system_info():
                 "db_status_color": "text-warning",
                 "last_update": "-",
                 "platform": "-",
+                "platform_version": "-",
                 "architecture": "-",
+                "machine": "-",
+                "processor": "-",
+                "is_windows": False,
+                "is_linux": False,
+                "is_macos": False,
             },
         }
 
@@ -509,20 +523,29 @@ async def ip_tool(request: IpRequest):
     IP地址信息查询和验证
     """
     try:
-        import re
-
-        # 验证IPv4地址
-        ipv4_pattern = (
-            r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
-            r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-        )
-
-        if re.match(ipv4_pattern, request.ip):
-            # 验证通过
-            return {
-                "success": True,
-                "result": {"ip": request.ip, "format": "IPv4", "valid": True},
+        # 验证IP地址
+        if NetUtils.is_ipv4(request.ip):
+            # IPv4地址
+            result = {
+                "ip": request.ip,
+                "format": "IPv4",
+                "valid": True,
+                "private": NetUtils.is_private_ip(request.ip),
+                "loopback": NetUtils.is_loopback_ip(request.ip),
+                "reserved": NetUtils.is_reserved_ip(request.ip)
             }
+            return {"success": True, "result": result}
+        elif NetUtils.is_ipv6(request.ip):
+            # IPv6地址
+            result = {
+                "ip": request.ip,
+                "format": "IPv6",
+                "valid": True,
+                "private": NetUtils.is_private_ip(request.ip),
+                "loopback": NetUtils.is_loopback_ip(request.ip),
+                "reserved": NetUtils.is_reserved_ip(request.ip)
+            }
+            return {"success": True, "result": result}
         else:
             # 验证失败
             return {"success": False, "error": "无效的IP地址格式"}
