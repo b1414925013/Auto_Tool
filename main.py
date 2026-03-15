@@ -8,9 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.database import close_db, init_db, init_default_data
-from app.middleware import OperationLogMiddleware
-from app.routes import common, dtn, system
+from app.core.database import close_db, init_db, init_default_data
+from app.common.middleware import OperationLogMiddleware
+from app.system.routes import role, system
+from app.dtn.routes import graph_db_router as dtn_router
+from app.common.routes import common
 
 # 加载环境变量
 load_dotenv()
@@ -44,7 +46,7 @@ async def init_sample_logs():
     print("开始初始化示例操作日志...")
     from datetime import datetime, timedelta
 
-    from app.models.operation_log import OperationLog
+    from app.common.models.operation_log import OperationLog
 
     try:
         # 检查是否已有操作日志
@@ -128,8 +130,9 @@ app.add_middleware(
 app.add_middleware(OperationLogMiddleware)
 
 # 注册路由
-app.include_router(dtn.router, prefix="/api/dtn", tags=["DTN"])
+app.include_router(dtn_router, prefix="/api/dtn", tags=["DTN"])
 app.include_router(system.router, prefix="/api/system", tags=["系统管理"])
+app.include_router(role.router, prefix="/api/role", tags=["角色管理"])
 app.include_router(common.router, prefix="/api/common", tags=["公共"])
 
 # 添加静态文件服务

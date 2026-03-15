@@ -1,7 +1,7 @@
 from tortoise import fields, models
 
 
-class GraphDBPassword(models.Model):
+class GraphDB(models.Model):
     """图数据库密码模型"""
 
     id = fields.IntField(pk=True, index=True)
@@ -12,4 +12,4 @@ class GraphDBPassword(models.Model):
     updated_at = fields.DatetimeField(auto_now=True)
 
     class Meta:
-        table = "graph_db_passwords"
+        table = "graph_db"

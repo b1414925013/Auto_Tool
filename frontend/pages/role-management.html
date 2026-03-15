@@ -1,0 +1,84 @@
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title">角色管理</h5>
+        <button class="btn btn-primary" id="add-role-btn">
+            <i class="fas fa-plus"></i> 新增角色
+        </button>
+    </div>
+    <div class="card-body">
+        <!-- 搜索框 -->
+        <div class="mb-4">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="搜索角色名称或编码..." id="role-search-input">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" id="role-search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 数据表格 -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>角色名称</th>
+                        <th>角色编码</th>
+                        <th>角色描述</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="role-table-body">
+                    <!-- 数据将通过 JavaScript 动态填充 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 角色模态框 -->
+<div class="modal fade" id="role-modal" tabindex="-1" aria-labelledby="role-modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="role-modal-title">新增角色</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="role-form">
+                    <input type="hidden" id="role-id">
+                    <div class="mb-3">
+                        <label for="role-name" class="form-label">角色名称</label>
+                        <input type="text" class="form-control" id="role-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role-code" class="form-label">角色编码</label>
+                        <input type="text" class="form-control" id="role-code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role-description" class="form-label">角色描述</label>
+                        <textarea class="form-control" id="role-description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="save-role-btn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 页面特定的 JavaScript -->
+<script type="module">
+    // 导入页面初始化函数
+    import { initRoleManagementPage } from '/frontend/js/role-management.js';
+    
+    // 页面加载完成后初始化
+    $(document).ready(function() {
+        initRoleManagementPage();
+    });
+</script>

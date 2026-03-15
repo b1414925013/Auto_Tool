@@ -50,6 +50,9 @@ venv38/
 env/
 ENV/
 .venv/
+.agents
+.qoder
+.trae
 
 # 文档
 push_to_github.md

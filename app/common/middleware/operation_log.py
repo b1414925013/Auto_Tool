@@ -8,7 +8,7 @@ from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.models.operation_log import OperationLog
+from app.common.models.operation_log import OperationLog
 
 # 定义需要记录日志的路径和操作描述映射
 OPERATION_DESC_MAP = {

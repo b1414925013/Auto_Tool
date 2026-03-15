@@ -52,6 +52,11 @@
                             <i class="fas fa-users"></i> <span>用户管理</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="role-management">
+                            <i class="fas fa-user-shield"></i> <span>角色管理</span>
+                        </a>
+                    </li>
                 </ul>
             </li>
             <li class="nav-item">
@@ -116,6 +121,7 @@
         import { Utils } from '/frontend/js/api.js';
         import { initGraphDBPasswordPage } from '/frontend/js/graph-db-password.js';
         import { initUserManagementPage } from '/frontend/js/user-management.js';
+        import { initRoleManagementPage } from '/frontend/js/role-management.js';
         import { initDashboardPage } from '/frontend/js/dashboard.js';
 
         // 页面加载完成后执行
@@ -149,8 +155,13 @@
             $('.top-navbar .mr-3').text(`欢迎，${username}`);
             
             // 根据角色显示/隐藏系统管理菜单
-            const userRole = localStorage.getItem('user_role') || 'user';
-            if (userRole !== 'admin') {
+            const userRole = localStorage.getItem('user_role') || 'normal_user';
+            const userRoles = JSON.parse(localStorage.getItem('user_roles') || '[]');
+            
+            // 检查用户是否有超级管理员或普通管理员角色
+            const hasAdminRole = userRole === 'super_admin' || userRole === 'admin' || userRoles.includes('super_admin') || userRoles.includes('admin');
+            
+            if (!hasAdminRole) {
                 // 非管理员，隐藏系统管理菜单
                 $('li.nav-item:has(a:contains(系统管理))').remove();
             }
@@ -247,6 +258,9 @@
                     break;
                 case 'user-management':
                     initUserManagementPage();
+                    break;
+                case 'role-management':
+                    initRoleManagementPage();
                     break;
                 case 'common-tools':
                     // 公共工具页面不需要额外初始化，因为它有自己的初始化逻辑

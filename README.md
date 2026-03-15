@@ -1,13 +1,13 @@
 # Auto_Tool 后台管理系统
 
-一个基于 FastAPI 和 Bootstrap 5 开发的功能完善的后台管理系统，提供图数据库密码管理、用户管理、操作日志记录、公共工具等功能。
+一个基于 FastAPI 和 Bootstrap 5 开发的功能完善的后台管理系统，提供图数据库密码管理、用户管理、角色管理、操作日志记录、公共工具等功能。
 
 ## 技术栈
 
-- **后端**: FastAPI + Python 3.8
-- **数据库**: MySQL
+- **后端**: FastAPI + Python 3.8+
+- **数据库**: MySQL / SQLite / PostgreSQL (多数据库支持)
 - **前端**: Bootstrap 5 + jQuery
-- **ORM**: SQLAlchemy
+- **ORM**: Tortoise-ORM (异步 ORM)
 - **认证**: JWT
 - **密码加密**: bcrypt
 - **AOP 中间件**: FastAPI 自定义中间件
@@ -17,44 +17,58 @@
 ```
 Auto_Tool/
 ├── app/
-│   ├── middleware/       # 中间件
-│   │   ├── __init__.py
-│   │   └── operation_log.py  # 操作日志 AOP 中间件
-│   ├── routes/           # API 路由
-│   │   ├── common.py     # 公共路由（仪表盘、操作日志、工具）
-│   │   ├── dtn.py        # DTN 相关路由
-│   │   └── system.py     # 系统管理路由
-│   ├── models/           # 数据模型
-│   │   ├── graph_db_password.py  # 图数据库密码模型
-│   │   ├── operation_log.py       # 操作日志模型
-│   │   └── user.py                 # 用户模型
-│   ├── schemas/          # Pydantic 模型
-│   │   ├── graph_db_password.py
-│   │   ├── operation_log.py
-│   │   └── user.py
-│   └── database.py       # 数据库配置
+│   ├── core/             # 核心模块
+│   │   └── database.py   # 数据库配置
+│   ├── common/           # 公共模块
+│   │   ├── middleware/   # 中间件
+│   │   │   └── operation_log.py  # 操作日志 AOP 中间件
+│   │   ├── models/       # 数据模型
+│   │   │   └── operation_log.py  # 操作日志模型
+│   │   ├── schemas/      # Pydantic 模型
+│   │   │   └── operation_log.py
+│   │   └── routes/       # API 路由
+│   │       └── common.py # 公共路由（仪表盘、操作日志、工具）
+│   ├── dtn/              # DTN 模块
+│   │   ├── models/       # 数据模型
+│   │   │   └── graph_db.py  # 图数据库密码模型
+│   │   ├── schemas/      # Pydantic 模型
+│   │   │   └── graph_db.py
+│   │   └── routes/       # API 路由
+│   │       └── graph_db.py  # DTN 相关路由
+│   ├── system/           # 系统管理模块
+│   │   ├── models/       # 数据模型
+│   │   │   ├── user.py           # 用户模型
+│   │   │   ├── role.py           # 角色模型
+│   │   │   └── user_role.py      # 用户角色关联模型
+│   │   ├── schemas/      # Pydantic 模型
+│   │   │   ├── user.py
+│   │   │   └── role.py
+│   │   └── routes/       # API 路由
+│   │       ├── system.py  # 系统管理路由
+│   │       └── role.py    # 角色管理路由
 ├── frontend/             # 前端代码
 │   ├── index.html        # 主页面
 │   ├── pages/            # 子页面
 │   │   ├── dashboard.html        # 首页仪表盘
 │   │   ├── login.html            # 登录页面
-│   │   ├── graph-db-password.html  # 图数据库密码管理
-│   │   ├── user-management.html    # 用户管理
-│   │   ├── common-tools.html       # 公共工具
-│   │   └── custom-tools.html       # 自定义工具
+│   │   ├── graph-db.html         # 图数据库密码管理
+│   │   ├── user-management.html  # 用户管理
+│   │   ├── role-management.html  # 角色管理
+│   │   ├── common-tools.html     # 公共工具
+│   │   └── custom-tools.html     # 自定义工具
 │   ├── css/              # 样式文件
 │   │   └── style.css
 │   └── js/               # JavaScript 文件
 │       ├── api.js
 │       ├── dashboard.js
 │       ├── login.js
-│       ├── graph-db-password.js
+│       ├── graph-db.js
 │       ├── user-management.js
+│       ├── role-management.js
 │       ├── common-tools.js
 │       └── custom-tools.js
 ├── main.py               # FastAPI 应用入口
 ├── requirements.txt      # 依赖包列表
-├── database_init.sql     # 数据库初始化脚本
 ├── .env                  # 环境变量配置
 ├── .gitignore
 └── README.md             # 项目说明
@@ -62,8 +76,26 @@ Auto_Tool/
 
 ## 环境要求
 
-- **Python**: 3.8
-- **MySQL**: 5.7+
+- **Python**: 3.8+
+- **数据库选项**:
+  - MySQL 5.7+ (推荐)
+  - SQLite 3.30+
+  - PostgreSQL 12+
+
+## 依赖说明
+
+项目使用以下主要依赖包：
+
+- `fastapi` - FastAPI 框架
+- `uvicorn` - ASGI 服务器
+- `python-dotenv` - 环境变量管理
+- `passlib` + `bcrypt` - 密码加密
+- `python-jose` - JWT 认证
+- `email-validator` - 邮箱验证
+- `jsonpath-ng` - JSONPath 解析
+- `tortoise-orm` - 异步 ORM
+- `aiomysql` - MySQL 异步驱动
+- `asyncpg` - PostgreSQL 异步驱动
 
 ## 安装步骤
 
@@ -97,8 +129,14 @@ Auto_Tool/
    复制 `.env` 文件并修改配置：
 
    ```bash
-   # 数据库连接信息
-   DATABASE_URL="mysql+mysqlconnector://用户名:密码@localhost:3306/数据库名"
+   # 数据库连接信息 - MySQL
+   DATABASE_URL="mysql://用户名:密码@localhost:3306/数据库名"
+
+   # 数据库连接信息 - SQLite (可选)
+   # DATABASE_URL="sqlite://db.sqlite3"
+
+   # 数据库连接信息 - PostgreSQL (可选)
+   # DATABASE_URL="postgres://用户名:密码@localhost:5432/数据库名"
 
    # JWT 密钥
    SECRET_KEY="your-secret-key"
@@ -110,17 +148,19 @@ Auto_Tool/
 
 5. **初始化数据库**
 
-   运行 `database_init.sql` 脚本创建数据库和表结构：
+   启动应用时，Tortoise-ORM 会自动创建数据库表结构并初始化默认数据：
 
    ```bash
-   mysql -u 用户名 -p < database_init.sql
+   python main.py
    ```
 
-   该脚本会创建：
-   - `graph_db_passwords` 表（图数据库密码）
-   - `users` 表（用户）
+   系统会自动创建：
+   - `sys_user` 表（用户）
+   - `sys_role` 表（角色）
+   - `sys_user_role` 表（用户角色关联）
+   - `graph_db` 表（图数据库密码）
    - `operation_logs` 表（操作日志）
-   - 并插入示例数据
+   - 并插入默认角色和用户数据
 
 6. **启动应用**
 
@@ -153,15 +193,28 @@ Auto_Tool/
 - 编辑现有用户
 - 删除用户
 - 用户密码加密存储（bcrypt）
+- 用户角色分配
 
-### 4. 操作日志系统
+### 4. 角色管理
+
+- 查看所有角色
+- 添加新角色
+- 编辑现有角色
+- 删除角色
+- 基于角色的访问控制
+- 默认角色：
+  - 超级管理员 (super_admin)：拥有所有权限
+  - 普通管理员 (admin)：拥有管理权限
+  - 普通用户 (normal_user)：拥有基础权限
+
+### 5. 操作日志系统
 
 - **AOP 中间件自动记录**：所有 API 操作自动记录到数据库
 - 记录信息包括：操作类型、操作描述、用户、状态、请求 URL、请求方法、IP 地址、User-Agent、错误信息、时间戳
 - 首页实时展示最近操作日志
 - 支持查询操作日志列表
 
-### 5. 公共工具
+### 6. 公共工具
 
 - **变量命名转换工具**：支持多种命名格式互相转换
   - 驼峰命名法 (camelCase)
@@ -171,11 +224,11 @@ Auto_Tool/
   - 包名格式 (package.name)
   - 中横线+小写 (kebab-case)
 
-### 6. 自定义工具
+### 7. 自定义工具
 
 - **自定义长耗时任务**：支持配置参数执行长时间任务
 
-### 7. 系统特性
+### 8. 系统特性
 
 - 响应式设计，支持移动端
 - 模块化前端架构，按需加载页面
@@ -203,11 +256,11 @@ Auto_Tool/
 
 #### DTN 接口 (`/api/dtn`)
 
-- `GET /api/dtn/graph-db-passwords` - 获取图数据库密码列表
-- `POST /api/dtn/graph-db-passwords` - 创建图数据库密码
-- `GET /api/dtn/graph-db-passwords/{id}` - 获取图数据库密码详情
-- `PUT /api/dtn/graph-db-passwords/{id}` - 更新图数据库密码
-- `DELETE /api/dtn/graph-db-passwords/{id}` - 删除图数据库密码
+- `GET /api/dtn/graph-db` - 获取图数据库密码列表
+- `POST /api/dtn/graph-db` - 创建图数据库密码
+- `GET /api/dtn/graph-db/{id}` - 获取图数据库密码详情
+- `PUT /api/dtn/graph-db/{id}` - 更新图数据库密码
+- `DELETE /api/dtn/graph-db/{id}` - 删除图数据库密码
 
 #### 系统管理接口 (`/api/system`)
 
@@ -217,19 +270,30 @@ Auto_Tool/
 - `PUT /api/system/users/{id}` - 更新用户
 - `DELETE /api/system/users/{id}` - 删除用户
 - `POST /api/system/login` - 用户登录
+- `GET /api/system/me` - 获取当前用户信息
+
+#### 角色管理接口 (`/api/role`)
+
+- `GET /api/role/roles` - 获取角色列表
+- `POST /api/role/roles` - 创建角色
+- `GET /api/role/roles/{id}` - 获取角色详情
+- `PUT /api/role/roles/{id}` - 更新角色
+- `DELETE /api/role/roles/{id}` - 删除角色
+- `GET /api/role/users/{user_id}/roles` - 获取用户角色
+- `POST /api/role/users/{user_id}/roles` - 分配用户角色
 
 ## 开发指南
 
 ### 后端开发
 
-1. **添加新路由**：在 `app/routes/` 目录下创建新的路由文件
-2. **添加新模型**：在 `app/models/` 目录下创建新的数据模型
-3. **添加新 Schema**：在 `app/schemas/` 目录下创建新的 Pydantic 模型
-4. **添加新中间件**：在 `app/middleware/` 目录下创建中间件
+1. **添加新路由**：在对应模块的 `routes/` 目录下创建新的路由文件
+2. **添加新模型**：在对应模块的 `models/` 目录下创建新的数据模型
+3. **添加新 Schema**：在对应模块的 `schemas/` 目录下创建新的 Pydantic 模型
+4. **添加新中间件**：在 `app/common/middleware/` 目录下创建中间件
 
 #### 操作日志中间件使用
 
-系统已内置操作日志中间件，会自动记录 API 操作。如需自定义操作描述，可修改 `app/middleware/operation_log.py` 中的 `OPERATION_DESC_MAP` 字典：
+系统已内置操作日志中间件，会自动记录 API 操作。如需自定义操作描述，可修改 `app/common/middleware/operation_log.py` 中的 `OPERATION_DESC_MAP` 字典：
 
 ```python
 OPERATION_DESC_MAP = {
@@ -246,6 +310,7 @@ OPERATION_DESC_MAP = {
 2. **添加页面逻辑**：在 `frontend/js/` 目录下创建对应的 JavaScript 文件
 3. **修改样式**：在 `frontend/css/style.css` 文件中添加或修改样式
 4. **在 `index.html` 中注册页面**：添加新页面到菜单和路由配置
+5. **添加页面到导航菜单**：在 `index.html` 中添加新页面到左侧导航栏
 
 ## 部署
 
@@ -288,20 +353,48 @@ OPERATION_DESC_MAP = {
 
 ### Q: 如何重置数据库？
 
-A: 删除数据库后重新运行 `database_init.sql` 脚本：
+A: 删除数据库后重新启动应用，Tortoise-ORM 会自动重新创建表结构并初始化默认数据：
 
 ```bash
-mysql -u 用户名 -p -e "DROP DATABASE IF EXISTS dtn_tool;"
-mysql -u 用户名 -p < database_init.sql
+# MySQL
+mysql -u 用户名 -p -e "DROP DATABASE IF EXISTS 数据库名;"
+mysql -u 用户名 -p -e "CREATE DATABASE 数据库名 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 然后重新启动应用
+python main.py
 ```
 
 ### Q: 如何修改中间件记录的操作？
 
-A: 编辑 `app/middleware/operation_log.py` 中的 `OPERATION_DESC_MAP` 字典，添加或修改路径和操作描述的映射。
+A: 编辑 `app/common/middleware/operation_log.py` 中的 `OPERATION_DESC_MAP` 字典，添加或修改路径和操作描述的映射。
 
 ### Q: 如何添加新的公共工具？
 
 A: 在 `frontend/pages/common-tools.html` 中添加新工具的 HTML 结构，并在 `frontend/js/common-tools.js` 中添加对应的 JavaScript 逻辑。
+
+### Q: 如何切换数据库类型？
+
+A: 修改 `.env` 文件中的 `DATABASE_URL` 配置：
+
+```bash
+# MySQL
+DATABASE_URL="mysql://用户名:密码@localhost:3306/数据库名"
+
+# SQLite
+DATABASE_URL="sqlite://db.sqlite3"
+
+# PostgreSQL
+DATABASE_URL="postgres://用户名:密码@localhost:5432/数据库名"
+```
+
+### Q: 数据库连接失败怎么办？
+
+A: 检查以下几点：
+1. 数据库服务是否运行
+2. 数据库连接信息是否正确
+3. 数据库用户是否有足够的权限
+4. 对于 MySQL，需要安装 `aiomysql` 依赖
+5. 对于 PostgreSQL，需要安装 `asyncpg` 依赖
 
 ## 许可证
 

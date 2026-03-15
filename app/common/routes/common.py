@@ -8,10 +8,10 @@ import fastapi
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.models.graph_db_password import GraphDBPassword
-from app.models.operation_log import OperationLog
-from app.models.user import User
-from app.schemas.operation_log import OperationLogCreate, OperationLogResponse
+from app.dtn.models.graph_db import GraphDB
+from app.common.models.operation_log import OperationLog
+from app.system.models.user import User
+from app.common.schemas.operation_log import OperationLogCreate, OperationLogResponse
 
 router = APIRouter()
 
@@ -115,7 +115,7 @@ async def get_dashboard_stats():
         user_count = await User.all().count()
 
         # 获取图数据库密码数量
-        graph_db_count = await GraphDBPassword.all().count()
+        graph_db_count = await GraphDB.all().count()
 
         # 检查数据库连接状态
         db_connected = True

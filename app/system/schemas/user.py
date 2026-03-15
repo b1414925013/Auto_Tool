@@ -5,23 +5,24 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class UserBase(BaseModel):
-    username: str = Field(..., min_length=1, max_length=50, description="用户名")
+    """用户基础模型"""
+    username: str = Field(..., min_length=3, max_length=50, description="用户名")
     email: EmailStr = Field(..., description="邮箱")
     full_name: Optional[str] = Field(None, max_length=100, description="全名")
-    role: str = Field(default="user", max_length=50, description="角色")
 
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6, max_length=50, description="密码")
+    role_code: Optional[str] = Field(None, description="角色编码")
 
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = Field(None, description="邮箱")
     full_name: Optional[str] = Field(None, max_length=100, description="全名")
-    role: Optional[str] = Field(None, max_length=50, description="角色")
     password: Optional[str] = Field(
         None, min_length=6, max_length=50, description="密码"
     )
+    role_code: Optional[str] = Field(None, description="角色编码")
 
 
 class User(UserBase):

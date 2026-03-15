@@ -5,6 +5,31 @@ const PAGES_BASE_URL = '/frontend/pages';
 // API 请求封装
 class ApiService {
     /**
+     * 获取认证令牌
+     * @returns {string|null} - 认证令牌
+     */
+    static getAuthToken() {
+        return localStorage.getItem('token');
+    }
+    
+    /**
+     * 构建请求头
+     * @returns {object} - 请求头
+     */
+    static getHeaders() {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        const token = this.getAuthToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        return headers;
+    }
+    
+    /**
      * 发送 GET 请求
      * @param {string} endpoint - API 端点
      * @returns {Promise<any>} - 返回数据
@@ -13,9 +38,7 @@ class ApiService {
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: this.getHeaders()
             });
             
             if (!response.ok) {
@@ -39,9 +62,7 @@ class ApiService {
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: this.getHeaders(),
                 body: JSON.stringify(data)
             });
             
@@ -66,9 +87,7 @@ class ApiService {
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: this.getHeaders(),
                 body: JSON.stringify(data)
             });
             
@@ -92,9 +111,7 @@ class ApiService {
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: this.getHeaders()
             });
             
             if (!response.ok) {
@@ -107,6 +124,9 @@ class ApiService {
     }
 }
 
+// 导出 ApiService
+export { ApiService };
+
 // 图数据库密码相关 API
 export const GraphDBPasswordApi = {
     /**
@@ -116,7 +136,7 @@ export const GraphDBPasswordApi = {
      * @returns {Promise<any[]>} - 密码列表
      */
     getAll: async (skip = 0, limit = 100) => {
-        return await ApiService.get(`/dtn/graph-db-passwords?skip=${skip}&limit=${limit}`);
+        return await ApiService.get(`/dtn/graph-db?skip=${skip}&limit=${limit}`);
     },
     
     /**
@@ -126,7 +146,7 @@ export const GraphDBPasswordApi = {
     getTotalCount: async () => {
         // 由于后端没有提供获取总数的API，我们通过获取所有记录来计算总数
         // 在实际生产环境中，应该添加一个专门的API来获取总数
-        const allPasswords = await ApiService.get('/dtn/graph-db-passwords?skip=0&limit=1000');
+        const allPasswords = await ApiService.get('/dtn/graph-db?skip=0&limit=1000');
         return allPasswords.length;
     },
     
@@ -136,7 +156,7 @@ export const GraphDBPasswordApi = {
      * @returns {Promise<any>} - 密码信息
      */
     getById: async (id) => {
-        return await ApiService.get(`/dtn/graph-db-passwords/${id}`);
+        return await ApiService.get(`/dtn/graph-db/${id}`);
     },
     
     /**
@@ -145,7 +165,7 @@ export const GraphDBPasswordApi = {
      * @returns {Promise<any>} - 创建的密码信息
      */
     create: async (password) => {
-        return await ApiService.post('/dtn/graph-db-passwords', password);
+        return await ApiService.post('/dtn/graph-db', password);
     },
     
     /**
@@ -155,7 +175,7 @@ export const GraphDBPasswordApi = {
      * @returns {Promise<any>} - 更新后的密码信息
      */
     update: async (id, password) => {
-        return await ApiService.put(`/dtn/graph-db-passwords/${id}`, password);
+        return await ApiService.put(`/dtn/graph-db/${id}`, password);
     },
     
     /**
@@ -164,7 +184,7 @@ export const GraphDBPasswordApi = {
      * @returns {Promise<void>}
      */
     delete: async (id) => {
-        return await ApiService.delete(`/dtn/graph-db-passwords/${id}`);
+        return await ApiService.delete(`/dtn/graph-db/${id}`);
     }
 };
 
@@ -198,6 +218,44 @@ export const UserApi = {
      */
     getById: async (id) => {
         return await ApiService.get(`/system/users/${id}`);
+    },
+    
+    /**
+     * 获取带角色的用户信息
+     * @param {number} id - 用户 ID
+     * @returns {Promise<any>} - 带角色的用户信息
+     */
+    getWithRoles: async (id) => {
+        return await ApiService.get(`/role/users-with-roles/${id}`);
+    },
+    
+    /**
+     * 获取用户的角色
+     * @param {number} id - 用户 ID
+     * @returns {Promise<any[]>} - 角色列表
+     */
+    getRoles: async (id) => {
+        return await ApiService.get(`/role/users/${id}/roles`);
+    },
+    
+    /**
+     * 为用户分配角色
+     * @param {number} userId - 用户 ID
+     * @param {number} roleId - 角色 ID
+     * @returns {Promise<any>} - 分配结果
+     */
+    assignRole: async (userId, roleId) => {
+        return await ApiService.post(`/role/users/${userId}/roles`, roleId);
+    },
+    
+    /**
+     * 移除用户角色
+     * @param {number} userId - 用户 ID
+     * @param {number} roleId - 角色 ID
+     * @returns {Promise<void>}
+     */
+    removeRole: async (userId, roleId) => {
+        return await ApiService.delete(`/role/users/${userId}/roles/${roleId}`);
     },
     
     /**
@@ -235,6 +293,56 @@ export const UserApi = {
      */
     login: async (credentials) => {
         return await ApiService.post('/system/login', credentials);
+    }
+};
+
+// 角色相关 API
+export const RoleApi = {
+    /**
+     * 获取所有角色
+     * @param {number} skip - 跳过的记录数
+     * @param {number} limit - 返回的记录数
+     * @returns {Promise<any[]>} - 角色列表
+     */
+    getAll: async (skip = 0, limit = 100) => {
+        return await ApiService.get(`/role/roles?skip=${skip}&limit=${limit}`);
+    },
+    
+    /**
+     * 根据 ID 获取角色
+     * @param {number} id - 角色 ID
+     * @returns {Promise<any>} - 角色信息
+     */
+    getById: async (id) => {
+        return await ApiService.get(`/role/roles/${id}`);
+    },
+    
+    /**
+     * 创建角色
+     * @param {object} role - 角色信息
+     * @returns {Promise<any>} - 创建的角色信息
+     */
+    create: async (role) => {
+        return await ApiService.post('/role/roles', role);
+    },
+    
+    /**
+     * 更新角色
+     * @param {number} id - 角色 ID
+     * @param {object} role - 角色信息
+     * @returns {Promise<any>} - 更新后的角色信息
+     */
+    update: async (id, role) => {
+        return await ApiService.put(`/role/roles/${id}`, role);
+    },
+    
+    /**
+     * 删除角色
+     * @param {number} id - 角色 ID
+     * @returns {Promise<void>}
+     */
+    delete: async (id) => {
+        return await ApiService.delete(`/role/roles/${id}`);
     }
 };
 
@@ -292,7 +400,8 @@ export const Utils = {
         const pageTitles = {
             'dashboard': '首页',
             'graph-db-password': '图数据库密码管理',
-            'user-management': '用户管理'
+            'user-management': '用户管理',
+            'role-management': '角色管理'
         };
 
         // 更新页面标题

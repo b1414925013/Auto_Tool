@@ -61,6 +61,7 @@ function getUserInfo(token) {
             // 存储用户信息
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('user_role', user.role);
+            localStorage.setItem('user_roles', JSON.stringify(user.roles || []));
             localStorage.setItem('username', user.username);
             
             // 跳转到首页

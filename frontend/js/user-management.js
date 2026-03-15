@@ -42,7 +42,7 @@ async function loadUsers(page = 1, limit = 10) {
     // 显示加载动画
     $('#user-table-body').html(`
         <tr>
-            <td colspan="7" class="text-center py-4">
+            <td colspan="8" class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
                     <span class="sr-only">加载中...</span>
                 </div>
@@ -55,12 +55,24 @@ async function loadUsers(page = 1, limit = 10) {
         const skip = (page - 1) * limit;
         const data = await UserApi.getAll(skip, limit);
         const totalCount = await UserApi.getTotalCount();
+        
+        // 获取每个用户的角色信息
+        for (const user of data) {
+            try {
+                const roles = await UserApi.getRoles(user.id);
+                user.roles = roles;
+            } catch (error) {
+                console.error(`Error loading roles for user ${user.id}:`, error);
+                user.roles = [];
+            }
+        }
+        
         renderUserTable(data, totalCount, page, limit);
     } catch (error) {
         console.error('Error loading users:', error);
         $('#user-table-body').html(`
             <tr>
-                <td colspan="7" class="text-center py-4">
+                <td colspan="8" class="text-center py-4">
                     <div class="alert alert-danger d-inline-block">
                         <i class="fas fa-exclamation-circle mr-2"></i>
                         加载失败，请检查网络连接或服务器状态
@@ -79,16 +91,21 @@ function renderUserTable(users, totalCount, currentPage, itemsPerPage) {
     let html = '';
     
     if (users.length === 0) {
-        html = '<tr><td colspan="7" class="text-center py-4">暂无数据</td></tr>';
+        html = '<tr><td colspan="8" class="text-center py-4">暂无数据</td></tr>';
     } else {
         users.forEach(user => {
+            // 显示用户角色
+            const roleNames = user.roles && user.roles.length > 0 
+                ? user.roles.map(role => role.name).join(', ') 
+                : '无';
+            
             html += `
                 <tr>
                     <td>${user.id}</td>
                     <td>${user.username}</td>
                     <td>${user.email}</td>
                     <td>${user.full_name || '-'}</td>
-                    <td>${user.role === 'admin' ? '管理员' : '普通用户'}</td>
+                    <td>${roleNames}</td>
                     <td>${Utils.formatDateTime(user.created_at)}</td>
                     <td>
                         <button class="btn btn-sm btn-outline-primary mr-1" onclick="editUser(${user.id})"><i class="fas fa-edit"></i> 编辑</button>
@@ -178,7 +195,20 @@ async function editUser(id) {
         $('#username').val(user.username);
         $('#email').val(user.email);
         $('#full_name').val(user.full_name || '');
-        $('#role').val(user.role);
+        
+        // 获取用户的角色
+        try {
+            const roles = await UserApi.getRoles(id);
+            if (roles && roles.length > 0) {
+                $('#role').val(roles[0].code);
+            } else {
+                $('#role').val('');
+            }
+        } catch (error) {
+            console.error('Error loading user roles:', error);
+            $('#role').val('');
+        }
+        
         $('#user-password').val(''); // 密码不回显
         $('#user-modal-label').text('编辑用户');
         $('#user-modal').modal('show');
@@ -194,11 +224,11 @@ async function saveUser() {
     const username = $('#username').val();
     const email = $('#email').val();
     const full_name = $('#full_name').val();
-    const role = $('#role').val();
+    const role_code = $('#role').val();
     const password = $('#user-password').val();
 
     // 新增用户时，密码是必填的；编辑用户时，密码是可选的
-    if (!username || !email || !role || (!id && !password)) {
+    if (!username || !email || !role_code || (!id && !password)) {
         Utils.showAlert('请填写必填字段', 'warning');
         return;
     }
@@ -207,7 +237,7 @@ async function saveUser() {
         username: username,
         email: email,
         full_name: full_name,
-        role: role
+        role_code: role_code
     };
 
     if (password) {

@@ -8,8 +8,8 @@ from fastapi.security import HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from app.models.user import User as UserModel
-from app.schemas.user import Token, User, UserCreate, UserLogin, UserUpdate
+from app.system.models.user import User as UserModel
+from app.system.schemas.user import Token, User, UserCreate, UserLogin, UserUpdate
 
 # 加载环境变量
 load_dotenv()
@@ -83,9 +83,25 @@ async def get_users(
 
 
 # 获取当前用户信息
-@router.get("/users/me", response_model=User)
+@router.get("/users/me")
 async def get_me(current_user: UserModel = Depends(get_current_user)):
-    return current_user
+    # 获取用户角色
+    user_roles = await current_user.user_roles.all().prefetch_related("role")
+    role_codes = [ur.role.code for ur in user_roles]
+    
+    # 构建用户信息响应
+    user_info = {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "created_at": current_user.created_at,
+        "updated_at": current_user.updated_at,
+        "role": role_codes[0] if role_codes else "normal_user",  # 兼容旧接口
+        "roles": role_codes  # 新接口，返回所有角色
+    }
+    
+    return user_info
 
 
 # 根据 ID 获取用户
@@ -134,8 +150,17 @@ async def create_user(
         email=user.email,
         password_hash=hashed_password,
         full_name=user.full_name,
-        role=user.role,
     )
+    
+    # 分配角色
+    if user.role_code:
+        from app.system.models.role import Role
+        from app.system.models.user_role import UserRole
+        
+        role = await Role.filter(code=user.role_code).first()
+        if role:
+            await UserRole.create(user=db_user, role=role)
+    
     return db_user
 
 
@@ -171,6 +196,21 @@ async def update_user(
         if len(password) > 72:
             password = password[:72]
         update_data["password_hash"] = get_password_hash(password)
+
+    # 处理角色更新
+    if "role_code" in update_data:
+        role_code = update_data.pop("role_code")
+        from app.system.models.role import Role
+        from app.system.models.user_role import UserRole
+        
+        # 删除用户现有的所有角色
+        await UserRole.filter(user_id=user_id).delete()
+        
+        # 分配新角色
+        if role_code:
+            role = await Role.filter(code=role_code).first()
+            if role:
+                await UserRole.create(user=db_user, role=role)
 
     await db_user.update_from_dict(update_data)
     await db_user.save()
