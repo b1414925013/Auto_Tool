@@ -188,6 +188,67 @@ export const GraphDBPasswordApi = {
     }
 };
 
+// DIM数据库相关 API
+export const DimDBApi = {
+    /**
+     * 获取所有DIM数据库密码
+     * @param {number} skip - 跳过的记录数
+     * @param {number} limit - 返回的记录数
+     * @returns {Promise<any[]>} - 密码列表
+     */
+    getAll: async (skip = 0, limit = 100) => {
+        return await ApiService.get(`/dtn/dim-db?skip=${skip}&limit=${limit}`);
+    },
+    
+    /**
+     * 获取DIM数据库密码总数
+     * @returns {Promise<number>} - 密码总数
+     */
+    getTotalCount: async () => {
+        // 由于后端没有提供获取总数的API，我们通过获取所有记录来计算总数
+        // 在实际生产环境中，应该添加一个专门的API来获取总数
+        const allPasswords = await ApiService.get('/dtn/dim-db?skip=0&limit=1000');
+        return allPasswords.length;
+    },
+    
+    /**
+     * 根据 ID 获取DIM数据库密码
+     * @param {number} id - 密码 ID
+     * @returns {Promise<any>} - 密码信息
+     */
+    getById: async (id) => {
+        return await ApiService.get(`/dtn/dim-db/${id}`);
+    },
+    
+    /**
+     * 创建DIM数据库密码
+     * @param {object} password - 密码信息
+     * @returns {Promise<any>} - 创建的密码信息
+     */
+    create: async (password) => {
+        return await ApiService.post('/dtn/dim-db', password);
+    },
+    
+    /**
+     * 更新DIM数据库密码
+     * @param {number} id - 密码 ID
+     * @param {object} password - 密码信息
+     * @returns {Promise<any>} - 更新后的密码信息
+     */
+    update: async (id, password) => {
+        return await ApiService.put(`/dtn/dim-db/${id}`, password);
+    },
+    
+    /**
+     * 删除DIM数据库密码
+     * @param {number} id - 密码 ID
+     * @returns {Promise<void>}
+     */
+    delete: async (id) => {
+        return await ApiService.delete(`/dtn/dim-db/${id}`);
+    }
+};
+
 // 用户相关 API
 export const UserApi = {
     /**

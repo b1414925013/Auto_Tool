@@ -24,7 +24,8 @@ async def init_db():
                 "app.system.models.role",
                 "app.system.models.user_role",
                 "app.common.models.operation_log",
-                "app.dtn.models.graph_db"
+                "app.dtn.models.graph_db",
+                "app.dim.models.dim_db"
             ]
         },
         # 设置时区为上海时区
