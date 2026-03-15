@@ -13,6 +13,10 @@ from app.common.models.operation_log import OperationLog
 from app.system.models.user import User
 from app.common.schemas.operation_log import OperationLogCreate, OperationLogResponse
 
+from btools.core.data.encodeutils import EncodeUtils
+from btools.core.data.cryptoutils import CryptoUtils
+from btools.core.media.colorutils import ColorUtils
+
 router = APIRouter()
 
 
@@ -323,11 +327,47 @@ async def timestamp_convert(request: TimestampRequest):
             }
         elif request.datetime:
             # 日期时间转时间戳
-            dt = datetime.fromisoformat(request.datetime.replace("Z", "+00:00"))
+            # 尝试多种格式解析
+            dt = None
+            formats = [
+                "%Y-%m-%dT%H:%M",
+                "%Y-%m-%dT%H:%M:%S",
+                "%Y-%m-%dT%H:%M:%S.%f",
+                "%Y-%m-%d %H:%M:%S",
+                "%Y-%m-%d %H:%M",
+                "%Y-%m-%d",
+            ]
+
+            # 处理ISO格式中的Z后缀
+            datetime_str = request.datetime.replace("Z", "+00:00")
+
+            # 首先尝试使用fromisoformat
+            try:
+                dt = datetime.fromisoformat(datetime_str)
+            except ValueError:
+                pass
+
+            # 如果失败，尝试使用strptime
+            if dt is None:
+                for fmt in formats:
+                    try:
+                        dt = datetime.strptime(datetime_str, fmt)
+                        break
+                    except ValueError:
+                        continue
+
+            if dt is None:
+                return {
+                    "success": False,
+                    "error": "无法解析日期时间格式，支持的格式：YYYY-MM-DDTHH:MM, YYYY-MM-DD HH:MM:SS等",
+                }
+
             result = {
                 "datetime": request.datetime,
                 "timestamp": int(dt.timestamp()),
                 "milliseconds": int(dt.timestamp() * 1000),
+                "iso": dt.isoformat(),
+                "utc": datetime.utcnow().isoformat(),
             }
         else:
             # 获取当前时间
@@ -353,15 +393,13 @@ async def base64_tool(request: Base64Request):
     对文本进行Base64编码或解码操作
     """
     try:
-        import base64
-
         if request.operation == "encode":
             # 编码
-            encoded = base64.b64encode(request.input.encode("utf-8")).decode("utf-8")
+            encoded = EncodeUtils.base64_encode(request.input)
             return {"success": True, "result": encoded}
         elif request.operation == "decode":
             # 解码
-            decoded = base64.b64decode(request.input).decode("utf-8")
+            decoded = EncodeUtils.base64_decode(request.input)
             return {"success": True, "result": decoded}
         else:
             return {
@@ -409,15 +447,13 @@ async def url_tool(request: UrlRequest):
     对URL进行编码或解码操作
     """
     try:
-        import urllib.parse
-
         if request.operation == "encode":
             # 编码
-            encoded = urllib.parse.quote(request.input)
+            encoded = EncodeUtils.url_encode(request.input)
             return {"success": True, "result": encoded}
         elif request.operation == "decode":
             # 解码
-            decoded = urllib.parse.unquote(request.input)
+            decoded = EncodeUtils.url_decode(request.input)
             return {"success": True, "result": decoded}
         else:
             return {
@@ -473,23 +509,21 @@ async def hash_tool(request: HashRequest):
     计算文本的MD5、SHA1等哈希值
     """
     try:
-        import hashlib
-
         if request.algorithm == "md5":
-            hash_obj = hashlib.md5(request.input.encode("utf-8"))
+            result = CryptoUtils.md5(request.input)
         elif request.algorithm == "sha1":
-            hash_obj = hashlib.sha1(request.input.encode("utf-8"))
+            result = CryptoUtils.sha1(request.input)
         elif request.algorithm == "sha256":
-            hash_obj = hashlib.sha256(request.input.encode("utf-8"))
+            result = CryptoUtils.sha256(request.input)
         elif request.algorithm == "sha512":
-            hash_obj = hashlib.sha512(request.input.encode("utf-8"))
+            result = CryptoUtils.sha512(request.input)
         else:
             return {
                 "success": False,
                 "error": "算法类型无效，支持的算法：md5, sha1, sha256, sha512",
             }
 
-        return {"success": True, "result": hash_obj.hexdigest()}
+        return {"success": True, "result": result}
     except Exception as e:
         return {"success": False, "error": f"计算失败: {str(e)}"}
 
@@ -534,152 +568,87 @@ async def color_converter(request: ColorRequest):
         if request.input_format == "hex":
             # HEX转RGB和HSL
             hex_value = request.input.lstrip("#")
-            if len(hex_value) != 6:
+            if len(hex_value) not in (3, 6):
                 return {"success": False, "error": "无效的HEX格式"}
 
-            r = int(hex_value[0:2], 16)
-            g = int(hex_value[2:4], 16)
-            b = int(hex_value[4:6], 16)
+            rgb = ColorUtils.hex_to_rgb(f"#{hex_value}")
+            hsl = ColorUtils.rgb_to_hsl(rgb[0], rgb[1], rgb[2])
 
-            # RGB转HSL
-            r_norm = r / 255.0
-            g_norm = g / 255.0
-            b_norm = b / 255.0
-
-            max_val = max(r_norm, g_norm, b_norm)
-            min_val = min(r_norm, g_norm, b_norm)
-
-            h = 0
-            s = 0
-            lightness = (max_val + min_val) / 2
-
-            if max_val != min_val:
-                d = max_val - min_val
-                s = d / (1 - abs(2 * lightness - 1))
-
-                if max_val == r_norm:
-                    h = ((g_norm - b_norm) / d) % 6
-                elif max_val == g_norm:
-                    h = (b_norm - r_norm) / d + 2
-                else:
-                    h = (r_norm - g_norm) / d + 4
-
-                h *= 60
-                if h < 0:
-                    h += 360
+            # 标准化HEX格式为6位
+            standard_hex = ColorUtils.rgb_to_hex(rgb[0], rgb[1], rgb[2])
 
             return {
                 "success": True,
                 "result": {
-                    "hex": f"#{hex_value}",
-                    "rgb": f"rgb({r}, {g}, {b})",
-                    "hsl": f"hsl({int(h)}, {int(s * 100)}%, {int(lightness * 100)}%)",
+                    "hex": standard_hex,
+                    "rgb": f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})",
+                    "hsl": f"hsl({int(hsl[0])}, {int(hsl[1])}%, {int(hsl[2])}%)",
                 },
             }
         elif request.input_format == "rgb":
             # RGB转HEX和HSL
             import re
 
+            # 尝试匹配标准rgb格式：rgb(255, 0, 0)
             match = re.match(r"rgb\((\d+),\s*(\d+),\s*(\d+)\)", request.input)
-            if not match:
-                return {"success": False, "error": "无效的RGB格式"}
-
-            r = int(match.group(1))
-            g = int(match.group(2))
-            b = int(match.group(3))
+            if match:
+                r = int(match.group(1))
+                g = int(match.group(2))
+                b = int(match.group(3))
+            else:
+                # 尝试匹配简化格式：255,0,0
+                match = re.match(r"(\d+),\s*(\d+),\s*(\d+)", request.input)
+                if not match:
+                    return {"success": False, "error": "无效的RGB格式"}
+                r = int(match.group(1))
+                g = int(match.group(2))
+                b = int(match.group(3))
 
             if not (0 <= r <= 255 and 0 <= g <= 255 and 0 <= b <= 255):
                 return {"success": False, "error": "RGB值必须在0-255之间"}
 
-            # RGB转HEX
-            hex_value = f"{r:02x}{g:02x}{b:02x}".upper()
-
-            # RGB转HSL
-            r_norm = r / 255.0
-            g_norm = g / 255.0
-            b_norm = b / 255.0
-
-            max_val = max(r_norm, g_norm, b_norm)
-            min_val = min(r_norm, g_norm, b_norm)
-
-            h = 0
-            s = 0
-            lightness = (max_val + min_val) / 2
-
-            if max_val != min_val:
-                d = max_val - min_val
-                s = d / (1 - abs(2 * lightness - 1))
-
-                if max_val == r_norm:
-                    h = ((g_norm - b_norm) / d) % 6
-                elif max_val == g_norm:
-                    h = (b_norm - r_norm) / d + 2
-                else:
-                    h = (r_norm - g_norm) / d + 4
-
-                h *= 60
-                if h < 0:
-                    h += 360
+            hex_value = ColorUtils.rgb_to_hex(r, g, b)
+            hsl = ColorUtils.rgb_to_hsl(r, g, b)
 
             return {
                 "success": True,
                 "result": {
-                    "hex": f"#{hex_value}",
+                    "hex": hex_value,
                     "rgb": f"rgb({r}, {g}, {b})",
-                    "hsl": f"hsl({int(h)}, {int(s * 100)}%, {int(lightness * 100)}%)",
+                    "hsl": f"hsl({int(hsl[0])}, {int(hsl[1])}%, {int(hsl[2])}%)",
                 },
             }
         elif request.input_format == "hsl":
             # HSL转RGB和HEX
             import re
 
+            # 尝试匹配标准hsl格式：hsl(0, 100%, 50%)
             match = re.match(r"hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)", request.input)
-            if not match:
-                return {"success": False, "error": "无效的HSL格式"}
+            if match:
+                h = int(match.group(1))
+                s = int(match.group(2))
+                lightness = int(match.group(3))
+            else:
+                # 尝试匹配简化格式：0,100,50
+                match = re.match(r"(\d+),\s*(\d+),\s*(\d+)", request.input)
+                if not match:
+                    return {"success": False, "error": "无效的HSL格式"}
+                h = int(match.group(1))
+                s = int(match.group(2))
+                lightness = int(match.group(3))
 
-            h = int(match.group(1))
-            s = int(match.group(2)) / 100.0
-            lightness = int(match.group(3)) / 100.0
-
-            if not (0 <= h <= 360 and 0 <= s <= 1 and 0 <= lightness <= 1):
+            if not (0 <= h <= 360 and 0 <= s <= 100 and 0 <= lightness <= 100):
                 return {"success": False, "error": "HSL值超出范围"}
 
-            # HSL转RGB
-            def hue_to_rgb(p, q, t):
-                if t < 0:
-                    t += 1
-                if t > 1:
-                    t -= 1
-                if t < 1 / 6:
-                    return p + (q - p) * 6 * t
-                if t < 1 / 2:
-                    return q
-                if t < 2 / 3:
-                    return p + (q - p) * (2 / 3 - t) * 6
-                return p
-
-            if s == 0:
-                r = g = b = lightness
-            else:
-                q = lightness * (1 + s) if lightness < 0.5 else lightness + s - lightness * s
-                p = 2 * lightness - q
-                r = hue_to_rgb(p, q, h / 360 + 1 / 3)
-                g = hue_to_rgb(p, q, h / 360)
-                b = hue_to_rgb(p, q, h / 360 - 1 / 3)
-
-            r = int(r * 255)
-            g = int(g * 255)
-            b = int(b * 255)
-
-            # RGB转HEX
-            hex_value = f"{r:02x}{g:02x}{b:02x}".upper()
+            rgb = ColorUtils.hsl_to_rgb(h, s, lightness)
+            hex_value = ColorUtils.rgb_to_hex(rgb[0], rgb[1], rgb[2])
 
             return {
                 "success": True,
                 "result": {
-                    "hex": f"#{hex_value}",
-                    "rgb": f"rgb({r}, {g}, {b})",
-                    "hsl": f"hsl({h}, {int(s * 100)}%, {int(lightness * 100)}%)",
+                    "hex": hex_value,
+                    "rgb": f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})",
+                    "hsl": f"hsl({h}, {s}%, {lightness}%)",
                 },
             }
         else:
