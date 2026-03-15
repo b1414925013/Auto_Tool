@@ -56,3 +56,7 @@ ENV/
 
 # 文档
 push_to_github.md
+
+db.sqlite3
+db.sqlite3-shm
+db.sqlite3-wal
