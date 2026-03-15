@@ -16,6 +16,9 @@ from app.common.schemas.operation_log import OperationLogCreate, OperationLogRes
 from btools.core.data.encodeutils import EncodeUtils
 from btools.core.data.cryptoutils import CryptoUtils
 from btools.core.media.colorutils import ColorUtils
+from btools.core.basic.convertutils import Converter
+from btools.core.data.datetimeutils import DateTimeUtils
+from btools.core.basic.randomutils import RandomUtil
 
 router = APIRouter()
 
@@ -312,49 +315,20 @@ async def timestamp_convert(request: TimestampRequest):
     将时间戳转换为日期时间格式，或反之
     """
     try:
-        from datetime import datetime
-
         result = {}
 
         if request.timestamp:
             # 时间戳转日期时间
-            dt = datetime.fromtimestamp(request.timestamp)
+            dt = DateTimeUtils.timestamp_to_datetime(request.timestamp)
             result = {
                 "timestamp": request.timestamp,
-                "datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
-                "iso": dt.isoformat(),
-                "utc": datetime.utcnow().isoformat(),
+                "datetime": DateTimeUtils.format_datetime(dt),
+                "iso": DateTimeUtils.to_iso_format(dt),
+                "utc": DateTimeUtils.to_iso_format(DateTimeUtils.now_utc()),
             }
         elif request.datetime:
             # 日期时间转时间戳
-            # 尝试多种格式解析
-            dt = None
-            formats = [
-                "%Y-%m-%dT%H:%M",
-                "%Y-%m-%dT%H:%M:%S",
-                "%Y-%m-%dT%H:%M:%S.%f",
-                "%Y-%m-%d %H:%M:%S",
-                "%Y-%m-%d %H:%M",
-                "%Y-%m-%d",
-            ]
-
-            # 处理ISO格式中的Z后缀
-            datetime_str = request.datetime.replace("Z", "+00:00")
-
-            # 首先尝试使用fromisoformat
-            try:
-                dt = datetime.fromisoformat(datetime_str)
-            except ValueError:
-                pass
-
-            # 如果失败，尝试使用strptime
-            if dt is None:
-                for fmt in formats:
-                    try:
-                        dt = datetime.strptime(datetime_str, fmt)
-                        break
-                    except ValueError:
-                        continue
+            dt = DateTimeUtils.parse_datetime_auto(request.datetime)
 
             if dt is None:
                 return {
@@ -364,20 +338,20 @@ async def timestamp_convert(request: TimestampRequest):
 
             result = {
                 "datetime": request.datetime,
-                "timestamp": int(dt.timestamp()),
-                "milliseconds": int(dt.timestamp() * 1000),
-                "iso": dt.isoformat(),
-                "utc": datetime.utcnow().isoformat(),
+                "timestamp": int(DateTimeUtils.datetime_to_timestamp(dt)),
+                "milliseconds": DateTimeUtils.datetime_to_milliseconds(dt),
+                "iso": DateTimeUtils.to_iso_format(dt),
+                "utc": DateTimeUtils.to_iso_format(DateTimeUtils.now_utc()),
             }
         else:
             # 获取当前时间
-            now = datetime.now()
+            now = DateTimeUtils.now()
             result = {
-                "current_datetime": now.strftime("%Y-%m-%d %H:%M:%S"),
-                "current_timestamp": int(now.timestamp()),
-                "current_milliseconds": int(now.timestamp() * 1000),
-                "iso": now.isoformat(),
-                "utc": datetime.utcnow().isoformat(),
+                "current_datetime": DateTimeUtils.format_datetime(now),
+                "current_timestamp": int(DateTimeUtils.datetime_to_timestamp(now)),
+                "current_milliseconds": DateTimeUtils.datetime_to_milliseconds(now),
+                "iso": DateTimeUtils.to_iso_format(now),
+                "utc": DateTimeUtils.to_iso_format(DateTimeUtils.now_utc()),
             }
 
         return {"success": True, "result": result}
@@ -472,7 +446,6 @@ async def password_generator(request: PasswordRequest):
     生成指定长度和复杂度的随机密码
     """
     try:
-        import random
         import string
 
         # 验证参数
@@ -494,7 +467,7 @@ async def password_generator(request: PasswordRequest):
             return {"success": False, "error": "至少需要选择一种字符类型"}
 
         # 生成密码
-        password = "".join(random.choice(charset) for _ in range(request.length))
+        password = RandomUtil.randomStr(request.length, charset)
 
         return {"success": True, "result": password}
     except Exception as e:
@@ -668,41 +641,19 @@ async def naming_converter(request: NamingRequest):
     多种变量命名格式的互相转换
     """
     try:
-        # 解析输入为单词
-        words = []
-        current_word = ""
-
-        for char in request.input:
-            if char in "_- .":
-                if current_word:
-                    words.append(current_word.lower())
-                    current_word = ""
-            elif char.isupper():
-                if current_word and not (
-                    len(current_word) > 0 and current_word[-1].isupper()
-                ):
-                    words.append(current_word.lower())
-                    current_word = char.lower()
-                else:
-                    current_word += char.lower()
-            else:
-                current_word += char.lower()
-
-        if current_word:
-            words.append(current_word.lower())
-
-        words = [word for word in words if word]
+        # 使用Converter解析输入为单词
+        words = Converter.parse_to_words(request.input)
 
         if not words:
             return {"success": False, "error": "输入无效"}
 
-        # 生成各种命名格式
-        camel_case = words[0] + "".join(word.capitalize() for word in words[1:])
-        pascal_case = "".join(word.capitalize() for word in words)
+        # 使用Converter生成各种命名格式
+        camel_case = Converter.snake_to_camel("_".join(words))
+        pascal_case = Converter.to_pascal_case(words)
         snake_case = "_".join(words)
-        snake_case_upper = "_".join(word.upper() for word in words)
-        package_name = ".".join(words)
-        kebab_case = "-".join(words)
+        snake_case_upper = Converter.to_snake_case_upper(words)
+        package_name = Converter.to_package_name(words)
+        kebab_case = Converter.to_kebab_case(words)
 
         return {
             "success": True,
