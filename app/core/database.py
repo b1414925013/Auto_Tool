@@ -9,6 +9,25 @@ load_dotenv()
 # 数据库配置
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite://db.sqlite3")
 
+# Tortoise-ORM 配置，用于 Aerich 迁移工具
+TORTOISE_ORM = {
+    "connections": {"default": DATABASE_URL},
+    "apps": {
+        "models": {
+            "models": [
+                "app.system.models.user",
+                "app.system.models.role",
+                "app.system.models.user_role",
+                "app.common.models.operation_log",
+                "app.dtn.models.graph_db",
+                "app.dtn.models.machine_account",
+                "app.dim.models.dim_db"
+            ],
+            "default_connection": "default",
+        },
+    },
+}
+
 
 # 初始化 Tortoise-ORM
 async def init_db():
