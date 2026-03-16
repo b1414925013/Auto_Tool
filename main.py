@@ -12,6 +12,7 @@ from app.core.database import close_db, init_db, init_default_data
 from app.common.middleware import OperationLogMiddleware
 from app.system.routes import role, system
 from app.dtn.routes import graph_db_router as dtn_router
+from app.dtn.routes import machine_account_router
 from app.dim.routes import dim_db_router
 from app.common.routes import common
 
@@ -132,6 +133,7 @@ app.add_middleware(OperationLogMiddleware)
 
 # 注册路由
 app.include_router(dtn_router, prefix="/api/dtn", tags=["DTN"])
+app.include_router(machine_account_router, prefix="/api/dtn", tags=["DTN"])
 app.include_router(dim_db_router, prefix="/api/dtn", tags=["DIM"])
 app.include_router(system.router, prefix="/api/system", tags=["系统管理"])
 app.include_router(role.router, prefix="/api/role", tags=["角色管理"])

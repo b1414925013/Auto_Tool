@@ -34,6 +34,11 @@
                             <i class="fas fa-key"></i> <span>图数据库</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="machine-account">
+                            <i class="fas fa-microchip"></i> <span>机机账号</span>
+                        </a>
+                    </li>
                 </ul>
             </li>
             <li class="nav-item">
@@ -128,6 +133,7 @@
         // 导入 API 服务和工具函数
         import { Utils } from '/frontend/js/api.js';
         import { initGraphDBPasswordPage } from '/frontend/js/graph-db-password.js';
+        import { initMachineAccountPage } from '/frontend/js/machine-account.js';
         import { initDimDBPage } from '/frontend/js/dim-db.js';
         import { initUserManagementPage } from '/frontend/js/user-management.js';
         import { initRoleManagementPage } from '/frontend/js/role-management.js';
@@ -264,6 +270,9 @@
                     break;
                 case 'graph-db-password':
                     initGraphDBPasswordPage();
+                    break;
+                case 'machine-account':
+                    initMachineAccountPage();
                     break;
                 case 'dim-db':
                     initDimDBPage();

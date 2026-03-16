@@ -25,6 +25,7 @@ async def init_db():
                 "app.system.models.user_role",
                 "app.common.models.operation_log",
                 "app.dtn.models.graph_db",
+                "app.dtn.models.machine_account",
                 "app.dim.models.dim_db"
             ]
         },

@@ -249,6 +249,73 @@ export const DimDBApi = {
     }
 };
 
+// 机机账号相关 API
+export const MachineAccountApi = {
+    /**
+     * 获取所有机机账号
+     * @param {number} skip - 跳过的记录数
+     * @param {number} limit - 返回的记录数
+     * @param {string} ip - IP地址查询
+     * @returns {Promise<any[]>} - 账号列表
+     */
+    getAll: async (skip = 0, limit = 100, ip = null) => {
+        let url = `/dtn/machine-account?skip=${skip}&limit=${limit}`;
+        if (ip) {
+            url += `&ip=${encodeURIComponent(ip)}`;
+        }
+        return await ApiService.get(url);
+    },
+    
+    /**
+     * 获取机机账号总数
+     * @returns {Promise<number>} - 账号总数
+     */
+    getTotalCount: async () => {
+        // 由于后端没有提供获取总数的API，我们通过获取所有记录来计算总数
+        // 在实际生产环境中，应该添加一个专门的API来获取总数
+        const allAccounts = await ApiService.get('/dtn/machine-account?skip=0&limit=1000');
+        return allAccounts.length;
+    },
+    
+    /**
+     * 根据 ID 获取机机账号
+     * @param {number} id - 账号 ID
+     * @returns {Promise<any>} - 账号信息
+     */
+    getById: async (id) => {
+        return await ApiService.get(`/dtn/machine-account/${id}`);
+    },
+    
+    /**
+     * 创建机机账号
+     * @param {object} account - 账号信息
+     * @returns {Promise<any>} - 创建的账号信息
+     */
+    create: async (account) => {
+        return await ApiService.post('/dtn/machine-account', account);
+    },
+    
+    /**
+     * 更新机机账号
+     * @param {number} id - 账号 ID
+     * @param {object} account - 账号信息
+     * @param {boolean} regenerate - 是否重新生成机机账号密码
+     * @returns {Promise<any>} - 更新后的账号信息
+     */
+    update: async (id, account, regenerate = false) => {
+        return await ApiService.put(`/dtn/machine-account/${id}?regenerate=${regenerate}`, account);
+    },
+    
+    /**
+     * 删除机机账号
+     * @param {number} id - 账号 ID
+     * @returns {Promise<void>}
+     */
+    delete: async (id) => {
+        return await ApiService.delete(`/dtn/machine-account/${id}`);
+    }
+};
+
 // 用户相关 API
 export const UserApi = {
     /**
@@ -461,6 +528,7 @@ export const Utils = {
         const pageTitles = {
             'dashboard': '首页',
             'graph-db-password': '图数据库密码管理',
+            'machine-account': '机机账号管理',
             'user-management': '用户管理',
             'role-management': '角色管理'
         };

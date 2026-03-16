@@ -198,6 +198,11 @@ body {
     text-align: center;
 }
 
+/* 表格间隔色 */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
 .form-label {
     font-weight: 500;
     color: var(--dark-color);
@@ -338,6 +343,7 @@ body {
 
 .modal-header {
     background-color: #f8f9fa;
+    color: #343a40;
     border-bottom: 1px solid #dee2e6;
 }
 
