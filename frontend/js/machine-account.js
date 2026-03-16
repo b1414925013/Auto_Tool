@@ -86,6 +86,7 @@ function renderAccountTable(accounts, totalCount, currentPage, itemsPerPage) {
             html += `
                 <tr>
                     <td>${account.id}</td>
+                    <td>${account.environment_id}</td>
                     <td>${account.ip}</td>
                     <td>${account.port}</td>
                     <td>${account.account}</td>
@@ -181,6 +182,7 @@ async function editAccount(id) {
     try {
         const account = await MachineAccountApi.getById(id);
         $('#account-id').val(account.id);
+        $('#environment-id').val(account.environment_id);
         $('#ip').val(account.ip);
         $('#port').val(account.port);
         $('#account').val(account.account);
@@ -199,6 +201,7 @@ async function editAccount(id) {
 // 保存账号
 async function saveAccount() {
     const id = $('#account-id').val();
+    const environmentId = $('#environment-id').val();
     const ip = $('#ip').val();
     const port = $('#port').val();
     const account = $('#account').val();
@@ -208,12 +211,13 @@ async function saveAccount() {
     const machinePassword = $('#machine-password').val();
     const regenerate = $('#regenerate-checkbox').prop('checked');
 
-    if (!ip || !port || !account || !password) {
+    if (!environmentId || !ip || !port || !account || !password) {
         Utils.showAlert('请填写必填字段', 'warning');
         return;
     }
 
     const data = {
+        environment_id: environmentId,
         ip: ip,
         port: parseInt(port),
         account: account,

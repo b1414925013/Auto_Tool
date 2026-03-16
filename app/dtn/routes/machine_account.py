@@ -33,10 +33,14 @@ async def get_machine_accounts(
     skip: int = 0,
     limit: int = 100,
     ip: Optional[str] = Query(None, description="根据IP查询"),
+    environment_id: Optional[str] = Query(None, description="根据环境编号查询"),
 ):
     if ip:
         # 根据IP查询
         accounts = await MachineAccountModel.filter(ip=ip).offset(skip).limit(limit)
+    elif environment_id:
+        # 根据环境编号查询
+        accounts = await MachineAccountModel.filter(environment_id=environment_id).offset(skip).limit(limit)
     else:
         # 获取所有
         accounts = await MachineAccountModel.all().offset(skip).limit(limit)
@@ -74,6 +78,16 @@ async def create_machine_account(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"MachineAccount for IP '{account.ip}' already exists",
+        )
+    
+    # 检查环境编号是否已存在
+    existing_env = await MachineAccountModel.filter(
+        environment_id=account.environment_id
+    ).first()
+    if existing_env:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"MachineAccount for environment ID '{account.environment_id}' already exists",
         )
 
     # 调用第三方接口生成机机账号密码
@@ -118,6 +132,23 @@ async def update_machine_account(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
                     f"MachineAccount for IP '{account_update.ip}' "
+                    "already exists"
+                ),
+            )
+    
+    # 检查环境编号是否已被其他记录使用
+    if (
+        account_update.environment_id
+        and account_update.environment_id != db_account.environment_id
+    ):
+        existing_env = await MachineAccountModel.filter(
+            environment_id=account_update.environment_id
+        ).first()
+        if existing_env:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"MachineAccount for environment ID '{account_update.environment_id}' "
                     "already exists"
                 ),
             )

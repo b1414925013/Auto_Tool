@@ -255,13 +255,19 @@ export const MachineAccountApi = {
      * 获取所有机机账号
      * @param {number} skip - 跳过的记录数
      * @param {number} limit - 返回的记录数
-     * @param {string} ip - IP地址查询
+     * @param {string} searchTerm - 搜索关键词（IP或环境编号）
      * @returns {Promise<any[]>} - 账号列表
      */
-    getAll: async (skip = 0, limit = 100, ip = null) => {
+    getAll: async (skip = 0, limit = 100, searchTerm = null) => {
         let url = `/dtn/machine-account?skip=${skip}&limit=${limit}`;
-        if (ip) {
-            url += `&ip=${encodeURIComponent(ip)}`;
+        if (searchTerm) {
+            // 尝试判断是IP还是环境编号
+            // IP格式：包含点号
+            if (searchTerm.includes('.')) {
+                url += `&ip=${encodeURIComponent(searchTerm)}`;
+            } else {
+                url += `&environment_id=${encodeURIComponent(searchTerm)}`;
+            }
         }
         return await ApiService.get(url);
     },

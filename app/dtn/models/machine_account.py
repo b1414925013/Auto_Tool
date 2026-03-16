@@ -5,6 +5,7 @@ class MachineAccount(models.Model):
     """机机账号模型"""
 
     id = fields.IntField(pk=True, index=True)
+    environment_id = fields.CharField(max_length=50, null=False, index=True)  # 环境编号
     ip = fields.CharField(max_length=100, null=False, index=True)  # IP地址
     port = fields.IntField(default=45339, null=False)  # 端口，默认45339
     account = fields.CharField(max_length=100, null=False)  # 账号
