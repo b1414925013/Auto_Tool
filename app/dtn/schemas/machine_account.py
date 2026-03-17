@@ -11,8 +11,6 @@ class MachineAccountBase(BaseModel):
     account: str = Field(..., min_length=1, max_length=100, description="账号")
     password: str = Field(..., min_length=1, max_length=255, description="密码")
     type: Optional[str] = Field(None, max_length=50, description="类型")
-    machine_account: Optional[str] = Field(None, max_length=100, description="机机账号")
-    machine_password: Optional[str] = Field(None, max_length=255, description="机机密码")
 
 
 class MachineAccountCreate(MachineAccountBase):
@@ -32,6 +30,8 @@ class MachineAccountUpdate(BaseModel):
 
 class MachineAccount(MachineAccountBase):
     id: int
+    machine_account: Optional[str] = Field(None, max_length=100, description="机机账号")
+    machine_password: Optional[str] = Field(None, max_length=255, description="机机密码")
     created_at: datetime
     updated_at: Optional[datetime]
 

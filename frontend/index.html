@@ -130,14 +130,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
     <!-- 公共 API 服务 -->
     <script type="module">
-        // 导入 API 服务和工具函数
-        import { Utils } from '/frontend/js/api.js';
-        import { initGraphDBPasswordPage } from '/frontend/js/graph-db-password.js';
-        import { initMachineAccountPage } from '/frontend/js/machine-account.js';
-        import { initDimDBPage } from '/frontend/js/dim-db.js';
-        import { initUserManagementPage } from '/frontend/js/user-management.js';
-        import { initRoleManagementPage } from '/frontend/js/role-management.js';
-        import { initDashboardPage } from '/frontend/js/dashboard.js';
+        // 导入 API 服务和工具函数，添加时间戳防止缓存
+        import { Utils } from '/frontend/js/api.js?v=7';
+        import { initGraphDBPasswordPage } from '/frontend/js/graph-db-password.js?v=7';
+        import { initMachineAccountPage } from '/frontend/js/machine-account.js?v=7';
+        import { initDimDBPage } from '/frontend/js/dim-db.js?v=7';
+        import { initUserManagementPage } from '/frontend/js/user-management.js?v=7';
+        import { initRoleManagementPage } from '/frontend/js/role-management.js?v=7';
+        import { initDashboardPage } from '/frontend/js/dashboard.js?v=7';
 
         // 页面加载完成后执行
         $(document).ready(function() {

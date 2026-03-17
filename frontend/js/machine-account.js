@@ -7,33 +7,50 @@ const itemsPerPage = 10;
 
 // 初始化机机账号页面
 export async function initMachineAccountPage() {
+    // 防止重复初始化
+    if (window.machineAccountPageInitialized) {
+        return;
+    }
+    window.machineAccountPageInitialized = true;
+    
     // 加载账号数据
     await loadAccounts(currentPage, itemsPerPage);
 
     // 绑定新增账号按钮事件
-    $('#add-account-btn').on('click', function() {
+    $('#add-account-btn').off('click').on('click', function() {
         resetAccountForm();
         $('#account-modal-label').text('新增机机账号');
         $('#account-modal').modal('show');
     });
 
     // 绑定保存账号按钮事件
-    $('#save-account-btn').on('click', function() {
+    $('#save-account-btn').off('click').on('click', function() {
         saveAccount();
     });
 
     // 绑定搜索按钮事件
-    $('#search-btn').on('click', function() {
+    $('#search-btn').off('click').on('click', function() {
         currentPage = 1;
         searchAccounts();
     });
 
     // 绑定搜索输入框回车事件
-    $('#search-input').on('keypress', function(e) {
+    $('#search-input').off('keypress').on('keypress', function(e) {
         if (e.which === 13) {
             currentPage = 1;
             searchAccounts();
         }
+    });
+    
+    // 使用事件委托绑定编辑和删除按钮点击事件
+    $('#account-table-body').off('click').on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+        editAccount(id);
+    });
+    
+    $('#account-table-body').off('click').on('click', '.btn-delete', function() {
+        const id = $(this).data('id');
+        deleteAccount(id);
     });
 }
 
@@ -84,7 +101,7 @@ function renderAccountTable(accounts, totalCount, currentPage, itemsPerPage) {
     } else {
         accounts.forEach(account => {
             html += `
-                <tr>
+                <tr data-id="${account.id}">
                     <td>${account.id}</td>
                     <td>${account.environment_id}</td>
                     <td>${account.ip}</td>
@@ -96,8 +113,8 @@ function renderAccountTable(accounts, totalCount, currentPage, itemsPerPage) {
                     <td>${account.machine_password || '-'}</td>
                     <td>${Utils.formatDateTime(account.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary mr-1" onclick="editAccount(${account.id})"><i class="fas fa-edit"></i> 编辑</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAccount(${account.id})"><i class="fas fa-trash"></i> 删除</button>
+                        <button class="btn btn-sm btn-outline-primary mr-1 btn-edit" data-id="${account.id}"><i class="fas fa-edit"></i> 编辑</button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${account.id}"><i class="fas fa-trash"></i> 删除</button>
                     </td>
                 </tr>
             `;
@@ -258,7 +275,7 @@ async function saveAccount() {
 async function deleteAccount(id) {
     if (confirm('确定要删除这个账号吗？')) {
         // 显示加载状态
-        const row = $(`button[onclick="deleteAccount(${id})"]`).closest('tr');
+        const row = $(`tr[data-id="${id}"]`);
         const originalContent = row.html();
         row.html(`
             <td colspan="10" class="text-center py-4">

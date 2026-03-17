@@ -7,33 +7,50 @@ const itemsPerPage = 10;
 
 // 初始化图数据库密码页面
 export async function initGraphDBPasswordPage() {
+    // 防止重复初始化
+    if (window.graphDBPasswordPageInitialized) {
+        return;
+    }
+    window.graphDBPasswordPageInitialized = true;
+    
     // 加载密码数据
     await loadPasswords(currentPage, itemsPerPage);
 
     // 绑定新增密码按钮事件
-    $('#add-password-btn').on('click', function() {
+    $('#add-password-btn').off('click').on('click', function() {
         resetPasswordForm();
         $('#password-modal-label').text('新增图数据库密码');
         $('#password-modal').modal('show');
     });
 
     // 绑定保存密码按钮事件
-    $('#save-password-btn').on('click', function() {
+    $('#save-password-btn').off('click').on('click', function() {
         savePassword();
     });
 
     // 绑定搜索按钮事件
-    $('#search-btn').on('click', function() {
+    $('#search-btn').off('click').on('click', function() {
         currentPage = 1;
         searchPasswords();
     });
 
     // 绑定搜索输入框回车事件
-    $('#search-input').on('keypress', function(e) {
+    $('#search-input').off('keypress').on('keypress', function(e) {
         if (e.which === 13) {
             currentPage = 1;
             searchPasswords();
         }
+    });
+    
+    // 使用事件委托绑定编辑和删除按钮点击事件
+    $('#password-table-body').off('click').on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+        editPassword(id);
+    });
+    
+    $('#password-table-body').off('click').on('click', '.btn-delete', function() {
+        const id = $(this).data('id');
+        deletePassword(id);
     });
 }
 
@@ -42,7 +59,7 @@ async function loadPasswords(page = 1, limit = 10) {
     // 显示加载动画
     $('#password-table-body').html(`
         <tr>
-            <td colspan="6" class="text-center py-4">
+            <td colspan="7" class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
                     <span class="sr-only">加载中...</span>
                 </div>
@@ -53,14 +70,15 @@ async function loadPasswords(page = 1, limit = 10) {
     
     try {
         const skip = (page - 1) * limit;
-        const data = await GraphDBPasswordApi.getAll(skip, limit);
+        const searchTerm = $('#search-input').val().trim();
+        const data = await GraphDBPasswordApi.getAll(skip, limit, searchTerm || null);
         const totalCount = await GraphDBPasswordApi.getTotalCount();
         renderPasswordTable(data, totalCount, page, limit);
     } catch (error) {
         console.error('Error loading passwords:', error);
         $('#password-table-body').html(`
             <tr>
-                <td colspan="6" class="text-center py-4">
+                <td colspan="7" class="text-center py-4">
                     <div class="alert alert-danger d-inline-block">
                         <i class="fas fa-exclamation-circle mr-2"></i>
                         加载失败，请检查网络连接或服务器状态
@@ -79,19 +97,20 @@ function renderPasswordTable(passwords, totalCount, currentPage, itemsPerPage) {
     let html = '';
     
     if (passwords.length === 0) {
-        html = '<tr><td colspan="6" class="text-center py-4">暂无数据</td></tr>';
+        html = '<tr><td colspan="7" class="text-center py-4">暂无数据</td></tr>';
     } else {
         passwords.forEach(password => {
             html += `
-                <tr>
+                <tr data-id="${password.id}">
                     <td>${password.id}</td>
-                    <td>${password.environment}</td>
-                    <td>${password.password}</td>
-                    <td>${password.description || '-'}</td>
+                    <td>${password.environment_id}</td>
+                    <td>${password.jump_server_ip}</td>
+                    <td>${password.pass_core_ip}</td>
+                    <td>${password.graph_db_password}</td>
                     <td>${Utils.formatDateTime(password.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary mr-1" onclick="editPassword(${password.id})"><i class="fas fa-edit"></i> 编辑</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deletePassword(${password.id})"><i class="fas fa-trash"></i> 删除</button>
+                        <button class="btn btn-sm btn-outline-primary mr-1 btn-edit" data-id="${password.id}"><i class="fas fa-edit"></i> 编辑</button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${password.id}"><i class="fas fa-trash"></i> 删除</button>
                     </td>
                 </tr>
             `;
@@ -174,9 +193,16 @@ async function editPassword(id) {
     try {
         const password = await GraphDBPasswordApi.getById(id);
         $('#password-id').val(password.id);
-        $('#environment').val(password.environment);
-        $('#password').val(password.password);
-        $('#description').val(password.description || '');
+        $('#environment-id').val(password.environment_id);
+        $('#jump-server-ip').val(password.jump_server_ip);
+        $('#jump-server-port').val(password.jump_server_port);
+        $('#jump-server-account').val(password.jump_server_account);
+        $('#jump-server-password').val(password.jump_server_password);
+        $('#pass-core-ip').val(password.pass_core_ip);
+        $('#pass-core-port').val(password.pass_core_port);
+        $('#pass-core-account').val(password.pass_core_account);
+        $('#pass-core-password').val(password.pass_core_password);
+        $('#pass-core-root-password').val(password.pass_core_root_password);
         $('#password-modal-label').text('编辑图数据库密码');
         $('#password-modal').modal('show');
     } catch (error) {
@@ -188,19 +214,34 @@ async function editPassword(id) {
 // 保存密码
 async function savePassword() {
     const id = $('#password-id').val();
-    const environment = $('#environment').val();
-    const password = $('#password').val();
-    const description = $('#description').val();
+    const environmentId = $('#environment-id').val();
+    const jumpServerIp = $('#jump-server-ip').val();
+    const jumpServerPort = $('#jump-server-port').val();
+    const jumpServerAccount = $('#jump-server-account').val();
+    const jumpServerPassword = $('#jump-server-password').val();
+    const passCoreIp = $('#pass-core-ip').val();
+    const passCorePort = $('#pass-core-port').val();
+    const passCoreAccount = $('#pass-core-account').val();
+    const passCorePassword = $('#pass-core-password').val();
+    const passCoreRootPassword = $('#pass-core-root-password').val();
 
-    if (!environment || !password) {
-        Utils.showAlert('请填写必填字段', 'warning');
+    if (!environmentId || !jumpServerIp || !jumpServerPort || !jumpServerAccount || !jumpServerPassword || 
+        !passCoreIp || !passCorePort || !passCoreAccount || !passCorePassword || !passCoreRootPassword) {
+        Utils.showAlert('请填写所有必填字段', 'warning');
         return;
     }
 
     const data = {
-        environment: environment,
-        password: password,
-        description: description
+        environment_id: environmentId,
+        jump_server_ip: jumpServerIp,
+        jump_server_port: parseInt(jumpServerPort),
+        jump_server_account: jumpServerAccount,
+        jump_server_password: jumpServerPassword,
+        pass_core_ip: passCoreIp,
+        pass_core_port: parseInt(passCorePort),
+        pass_core_account: passCoreAccount,
+        pass_core_password: passCorePassword,
+        pass_core_root_password: passCoreRootPassword
     };
 
     // 禁用保存按钮并显示加载状态
@@ -234,10 +275,10 @@ async function savePassword() {
 async function deletePassword(id) {
     if (confirm('确定要删除这个密码吗？')) {
         // 显示加载状态
-        const row = $(`button[onclick="deletePassword(${id})"]`).closest('tr');
+        const row = $(`tr[data-id="${id}"]`);
         const originalContent = row.html();
         row.html(`
-            <td colspan="6" class="text-center py-4">
+            <td colspan="7" class="text-center py-4">
                 <div class="spinner-border text-primary" role="status">
                     <span class="sr-only">删除中...</span>
                 </div>
@@ -246,6 +287,8 @@ async function deletePassword(id) {
         `);
         
         try {
+            console.log('Deleting graph DB password with id:', id);
+            console.log('Using GraphDBPasswordApi.delete');
             await GraphDBPasswordApi.delete(id);
             await loadPasswords();
             Utils.showAlert('密码删除成功', 'success');
@@ -259,19 +302,7 @@ async function deletePassword(id) {
 
 // 搜索密码
 function searchPasswords() {
-    const searchTerm = $('#search-input').val().toLowerCase();
-    const rows = $('#password-table-body tr');
-    
-    rows.each(function() {
-        const environment = $(this).find('td:eq(1)').text().toLowerCase();
-        const description = $(this).find('td:eq(3)').text().toLowerCase();
-        
-        if (environment.includes(searchTerm) || description.includes(searchTerm)) {
-            $(this).show();
-        } else {
-            $(this).hide();
-        }
-    });
+    loadPasswords(currentPage, itemsPerPage);
 }
 
 // 暴露全局函数

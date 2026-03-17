@@ -7,33 +7,50 @@ const itemsPerPage = 10;
 
 // 初始化用户管理页面
 export async function initUserManagementPage() {
+    // 防止重复初始化
+    if (window.userManagementPageInitialized) {
+        return;
+    }
+    window.userManagementPageInitialized = true;
+    
     // 加载用户数据
     await loadUsers(currentPage, itemsPerPage);
 
     // 绑定新增用户按钮事件
-    $('#add-user-btn').on('click', function() {
+    $('#add-user-btn').off('click').on('click', function() {
         resetUserForm();
         $('#user-modal-label').text('新增用户');
         $('#user-modal').modal('show');
     });
 
     // 绑定保存用户按钮事件
-    $('#save-user-btn').on('click', function() {
+    $('#save-user-btn').off('click').on('click', function() {
         saveUser();
     });
 
     // 绑定搜索按钮事件
-    $('#user-search-btn').on('click', function() {
+    $('#user-search-btn').off('click').on('click', function() {
         currentPage = 1;
         searchUsers();
     });
 
     // 绑定搜索输入框回车事件
-    $('#user-search-input').on('keypress', function(e) {
+    $('#user-search-input').off('keypress').on('keypress', function(e) {
         if (e.which === 13) {
             currentPage = 1;
             searchUsers();
         }
+    });
+    
+    // 使用事件委托绑定编辑和删除按钮点击事件
+    $('#user-table-body').off('click').on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+        editUser(id);
+    });
+    
+    $('#user-table-body').off('click').on('click', '.btn-delete', function() {
+        const id = $(this).data('id');
+        deleteUser(id);
     });
 }
 
@@ -100,7 +117,7 @@ function renderUserTable(users, totalCount, currentPage, itemsPerPage) {
                 : '无';
             
             html += `
-                <tr>
+                <tr data-id="${user.id}">
                     <td>${user.id}</td>
                     <td>${user.username}</td>
                     <td>${user.email}</td>
@@ -108,8 +125,8 @@ function renderUserTable(users, totalCount, currentPage, itemsPerPage) {
                     <td>${roleNames}</td>
                     <td>${Utils.formatDateTime(user.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary mr-1" onclick="editUser(${user.id})"><i class="fas fa-edit"></i> 编辑</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})"><i class="fas fa-trash"></i> 删除</button>
+                        <button class="btn btn-sm btn-outline-primary mr-1 btn-edit" data-id="${user.id}"><i class="fas fa-edit"></i> 编辑</button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${user.id}"><i class="fas fa-trash"></i> 删除</button>
                     </td>
                 </tr>
             `;
@@ -275,7 +292,7 @@ async function saveUser() {
 async function deleteUser(id) {
     if (confirm('确定要删除这个用户吗？')) {
         // 显示加载状态
-        const row = $(`button[onclick="deleteUser(${id})"]`).closest('tr');
+        const row = $(`tr[data-id="${id}"]`);
         const originalContent = row.html();
         row.html(`
             <td colspan="7" class="text-center py-4">

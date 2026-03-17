@@ -88,8 +88,8 @@
 
 <!-- 页面特定的 JavaScript -->
 <script type="module">
-    // 导入页面初始化函数
-    import { initUserManagementPage } from '/frontend/js/user-management.js';
+    // 导入页面初始化函数，添加时间戳防止缓存
+    import { initUserManagementPage } from '/frontend/js/user-management.js?v=4';
     
     // 页面加载完成后初始化
     $(document).ready(function() {

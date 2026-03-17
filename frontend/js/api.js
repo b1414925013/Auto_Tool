@@ -1,5 +1,5 @@
 // API 基础 URL
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = '/api';
 const PAGES_BASE_URL = '/frontend/pages';
 
 // API 请求封装
@@ -133,10 +133,21 @@ export const GraphDBPasswordApi = {
      * 获取所有图数据库密码
      * @param {number} skip - 跳过的记录数
      * @param {number} limit - 返回的记录数
+     * @param {string} searchTerm - 搜索关键词（环境编号或跳板机IP）
      * @returns {Promise<any[]>} - 密码列表
      */
-    getAll: async (skip = 0, limit = 100) => {
-        return await ApiService.get(`/dtn/graph-db?skip=${skip}&limit=${limit}`);
+    getAll: async (skip = 0, limit = 100, searchTerm = null) => {
+        let url = `/dtn/graph-db?skip=${skip}&limit=${limit}`;
+        if (searchTerm) {
+            // 尝试判断是环境编号还是跳板机IP
+            // IP格式：包含点号
+            if (searchTerm.includes('.')) {
+                url += `&jump_server_ip=${encodeURIComponent(searchTerm)}`;
+            } else {
+                url += `&environment_id=${encodeURIComponent(searchTerm)}`;
+            }
+        }
+        return await ApiService.get(url);
     },
     
     /**
@@ -184,6 +195,8 @@ export const GraphDBPasswordApi = {
      * @returns {Promise<void>}
      */
     delete: async (id) => {
+        console.log('GraphDBPasswordApi.delete called with id:', id);
+        console.log('Calling API:', `/dtn/graph-db/${id}`);
         return await ApiService.delete(`/dtn/graph-db/${id}`);
     }
 };
@@ -245,6 +258,8 @@ export const DimDBApi = {
      * @returns {Promise<void>}
      */
     delete: async (id) => {
+        console.log('DimDBApi.delete called with id:', id);
+        console.log('Calling API:', `/dtn/dim-db/${id}`);
         return await ApiService.delete(`/dtn/dim-db/${id}`);
     }
 };
@@ -521,6 +536,14 @@ export const Utils = {
      * @param {string} pageName - 页面名称
      */
     loadPage: (pageName) => {
+        // 重置所有页面的初始化标志
+        window.graphDBPasswordPageInitialized = false;
+        window.machineAccountPageInitialized = false;
+        window.dimDBPageInitialized = false;
+        window.userManagementPageInitialized = false;
+        window.roleManagementPageInitialized = false;
+        window.dashboardPageInitialized = false;
+        
         // 显示加载动画
         $('#content-container').html(`
             <div class="page-loading">

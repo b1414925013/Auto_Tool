@@ -7,33 +7,50 @@ const itemsPerPage = 10;
 
 // 初始化DIM数据库页面
 export async function initDimDBPage() {
+    // 防止重复初始化
+    if (window.dimDBPageInitialized) {
+        return;
+    }
+    window.dimDBPageInitialized = true;
+    
     // 加载密码数据
     await loadPasswords(currentPage, itemsPerPage);
 
     // 绑定新增密码按钮事件
-    $('#add-password-btn').on('click', function() {
+    $('#add-password-btn').off('click').on('click', function() {
         resetPasswordForm();
         $('#password-modal-label').text('新增DIM数据库密码');
         $('#password-modal').modal('show');
     });
 
     // 绑定保存密码按钮事件
-    $('#save-password-btn').on('click', function() {
+    $('#save-password-btn').off('click').on('click', function() {
         savePassword();
     });
 
     // 绑定搜索按钮事件
-    $('#search-btn').on('click', function() {
+    $('#search-btn').off('click').on('click', function() {
         currentPage = 1;
         searchPasswords();
     });
 
     // 绑定搜索输入框回车事件
-    $('#search-input').on('keypress', function(e) {
+    $('#search-input').off('keypress').on('keypress', function(e) {
         if (e.which === 13) {
             currentPage = 1;
             searchPasswords();
         }
+    });
+
+    // 使用事件委托绑定编辑和删除按钮点击事件
+    $('#password-table-body').off('click').on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+        editPassword(id);
+    });
+
+    $('#password-table-body').off('click').on('click', '.btn-delete', function() {
+        const id = $(this).data('id');
+        deletePassword(id);
     });
 }
 
@@ -83,15 +100,15 @@ function renderPasswordTable(passwords, totalCount, currentPage, itemsPerPage) {
     } else {
         passwords.forEach(password => {
             html += `
-                <tr>
+                <tr data-id="${password.id}">
                     <td>${password.id}</td>
                     <td>${password.environment}</td>
                     <td>${password.password}</td>
                     <td>${password.description || '-'}</td>
                     <td>${Utils.formatDateTime(password.created_at)}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary mr-1" onclick="editPassword(${password.id})"><i class="fas fa-edit"></i> 编辑</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="deletePassword(${password.id})"><i class="fas fa-trash"></i> 删除</button>
+                        <button class="btn btn-sm btn-outline-primary mr-1 btn-edit" data-id="${password.id}"><i class="fas fa-edit"></i> 编辑</button>
+                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${password.id}"><i class="fas fa-trash"></i> 删除</button>
                     </td>
                 </tr>
             `;
@@ -234,7 +251,7 @@ async function savePassword() {
 async function deletePassword(id) {
     if (confirm('确定要删除这个密码吗？')) {
         // 显示加载状态
-        const row = $(`button[onclick="deletePassword(${id})"]`).closest('tr');
+        const row = $(`tr[data-id="${id}"]`);
         const originalContent = row.html();
         row.html(`
             <td colspan="6" class="text-center py-4">
@@ -252,7 +269,16 @@ async function deletePassword(id) {
         } catch (error) {
             console.error('Error deleting password:', error);
             row.html(originalContent);
-            Utils.showAlert('删除失败，请重试', 'danger');
+            // 显示更详细的错误信息
+            let errorMessage = '删除失败';
+            if (error.response && error.response.data && error.response.data.detail) {
+                errorMessage = error.response.data.detail;
+            } else if (error.message && error.message.includes('404')) {
+                errorMessage = '记录不存在或已被删除';
+            }
+            Utils.showAlert(errorMessage, 'danger');
+            // 刷新列表以显示最新数据
+            await loadPasswords();
         }
     }
 }
