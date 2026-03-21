@@ -11,6 +11,7 @@ class User(models.Model):
     full_name = fields.CharField(max_length=100, null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
+    last_login_at = fields.DatetimeField(null=True)
 
     class Meta:
         table = "sys_user"

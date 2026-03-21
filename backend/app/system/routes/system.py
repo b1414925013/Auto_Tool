@@ -92,7 +92,8 @@ async def get_users(
             "email": user.email,
             "full_name": user.full_name,
             "created_at": user.created_at,
-            "updated_at": user.updated_at
+            "updated_at": user.updated_at,
+            "last_login_at": getattr(user, "last_login_at", None)
         }
         # 获取用户角色
         user_roles = user.user_roles
@@ -120,6 +121,7 @@ async def get_me(current_user: UserModel = Depends(get_current_user)):
         "full_name": current_user.full_name,
         "created_at": current_user.created_at,
         "updated_at": current_user.updated_at,
+        "last_login_at": getattr(current_user, "last_login_at", None),
         "role": role_codes[0] if role_codes else "normal_user",  # 兼容旧接口
         "roles": role_codes  # 新接口，返回所有角色
     }
@@ -146,7 +148,8 @@ async def get_user(
         "email": user.email,
         "full_name": user.full_name,
         "created_at": user.created_at,
-        "updated_at": user.updated_at
+        "updated_at": user.updated_at,
+        "last_login_at": getattr(user, "last_login_at", None)
     }
     # 获取用户角色
     user_roles = user.user_roles
@@ -287,6 +290,11 @@ async def login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # 更新最后登录时间
+    if hasattr(user, "last_login_at"):
+        user.last_login_at = datetime.utcnow()
+        await user.save()
 
     # 创建访问令牌
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

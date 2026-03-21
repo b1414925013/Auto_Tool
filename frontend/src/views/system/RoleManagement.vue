@@ -78,6 +78,7 @@
       v-model="dialogVisible"
       :title="dialogTitle"
       width="500px"
+      @close="handleDialogClose"
     >
       <el-form
         ref="formRef"
@@ -85,6 +86,9 @@
         :rules="formRules"
         label-width="100px"
       >
+        <el-form-item label="角色编码" prop="code">
+          <el-input v-model="formData.code" placeholder="请输入角色编码" />
+        </el-form-item>
         <el-form-item label="角色名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入角色名称" />
         </el-form-item>
@@ -175,6 +179,14 @@ const loadData = async () => {
   }
 }
 
+// 对话框关闭事件
+const handleDialogClose = () => {
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+}
+
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
@@ -198,6 +210,7 @@ const handleAdd = () => {
   dialogTitle.value = '新增角色'
   // 重置表单
   Object.assign(formData, {
+    code: '',
     name: '',
     description: ''
   })
@@ -207,6 +220,10 @@ const handleAdd = () => {
 // 编辑
 const handleEdit = (row) => {
   dialogTitle.value = '编辑角色'
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
   // 复制数据到表单
   Object.assign(formData, row)
   dialogVisible.value = true

@@ -78,6 +78,7 @@
       v-model="dialogVisible"
       :title="dialogTitle"
       width="600px"
+      @close="handleDialogClose"
     >
       <el-form
         ref="formRef"
@@ -178,6 +179,14 @@ const loadData = async () => {
   }
 }
 
+// 对话框关闭事件
+const handleDialogClose = () => {
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+}
+
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
@@ -203,12 +212,20 @@ const handleAdd = () => {
   Object.keys(formData).forEach(key => {
     formData[key] = ''
   })
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
   dialogVisible.value = true
 }
 
 // 编辑
 const handleEdit = (row) => {
   dialogTitle.value = '编辑DIM数据库'
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
   // 复制数据到表单
   Object.assign(formData, row)
   dialogVisible.value = true

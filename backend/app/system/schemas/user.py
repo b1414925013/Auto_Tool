@@ -29,6 +29,7 @@ class User(UserBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime]
+    last_login_at: Optional[datetime]
     role: str = Field(default="normal_user", description="角色编码")
 
     class Config:

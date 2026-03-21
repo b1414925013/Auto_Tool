@@ -77,43 +77,61 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogTitle"
-      width="600px"
+      width="650px"
+      @close="handleDialogClose"
     >
       <el-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="120px"
+        label-width="100px"
       >
+        <!-- 环境编号部分 -->
         <el-form-item label="环境编号" prop="environment_id">
           <el-input v-model="formData.environment_id" placeholder="请输入环境编号" />
         </el-form-item>
-        <el-form-item label="跳板机IP" prop="jump_server_ip">
-          <el-input v-model="formData.jump_server_ip" placeholder="请输入跳板机IP" />
+        
+        <!-- 分隔线 -->
+        <div class="divider-container">
+          <div class="divider-label">跳板机</div>
+          <div class="divider"></div>
+        </div>
+        
+        <!-- 跳板机相关信息 -->
+        <el-form-item label="IP" prop="jump_server_ip">
+          <el-input v-model="formData.jump_server_ip" placeholder="请输入IP" />
         </el-form-item>
-        <el-form-item label="跳板机端口" prop="jump_server_port">
+        <el-form-item label="端口" prop="jump_server_port">
           <el-input-number v-model="formData.jump_server_port" :min="1" :max="65535" :step="1" />
         </el-form-item>
-        <el-form-item label="跳板机账号" prop="jump_server_account">
-          <el-input v-model="formData.jump_server_account" placeholder="请输入跳板机账号" />
+        <el-form-item label="账号" prop="jump_server_account">
+          <el-input v-model="formData.jump_server_account" placeholder="请输入账号" />
         </el-form-item>
-        <el-form-item label="跳板机密码" prop="jump_server_password">
-          <el-input v-model="formData.jump_server_password" type="password" placeholder="请输入跳板机密码" />
+        <el-form-item label="密码" prop="jump_server_password">
+          <el-input v-model="formData.jump_server_password" type="password" placeholder="请输入密码" />
         </el-form-item>
-        <el-form-item label="pass-core节点IP" prop="pass_core_ip">
-          <el-input v-model="formData.pass_core_ip" placeholder="请输入pass-core节点IP" />
+        
+        <!-- 分隔线 -->
+        <div class="divider-container">
+          <div class="divider-label">pass-core</div>
+          <div class="divider"></div>
+        </div>
+        
+        <!-- pass-core相关信息 -->
+        <el-form-item label="IP" prop="pass_core_ip">
+          <el-input v-model="formData.pass_core_ip" placeholder="请输入节点IP" />
         </el-form-item>
-        <el-form-item label="pass-core节点端口" prop="pass_core_port">
+        <el-form-item label="端口" prop="pass_core_port">
           <el-input-number v-model="formData.pass_core_port" :min="1" :max="65535" :step="1" />
         </el-form-item>
-        <el-form-item label="pass-core节点账号" prop="pass_core_account">
-          <el-input v-model="formData.pass_core_account" placeholder="请输入pass-core节点账号" />
+        <el-form-item label="账号" prop="pass_core_account">
+          <el-input v-model="formData.pass_core_account" placeholder="请输入节点账号" />
         </el-form-item>
-        <el-form-item label="pass-core节点密码" prop="pass_core_password">
-          <el-input v-model="formData.pass_core_password" type="password" placeholder="请输入pass-core节点密码" />
+        <el-form-item label="密码" prop="pass_core_password">
+          <el-input v-model="formData.pass_core_password" type="password" placeholder="请输入节点密码" />
         </el-form-item>
-        <el-form-item label="pass-core节点Root密码" prop="pass_core_root_password">
-          <el-input v-model="formData.pass_core_root_password" type="password" placeholder="请输入pass-core节点Root密码" />
+        <el-form-item label="Root密码" prop="pass_core_root_password">
+          <el-input v-model="formData.pass_core_root_password" type="password" placeholder="请输入节点Root密码" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -230,6 +248,14 @@ const loadData = async () => {
   }
 }
 
+// 对话框关闭事件
+const handleDialogClose = () => {
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+}
+
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
@@ -259,12 +285,20 @@ const handleAdd = () => {
       formData[key] = ''
     }
   })
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
   dialogVisible.value = true
 }
 
 // 编辑
 const handleEdit = (row) => {
   dialogTitle.value = '编辑图数据库密码'
+  // 重置表单验证状态
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
   // 复制数据到表单
   Object.assign(formData, row)
   dialogVisible.value = true
@@ -369,6 +403,31 @@ onMounted(() => {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+/* 分隔线样式 */
+.divider-container {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.divider {
+  flex: 1;
+  height: 1px;
+  background-color: #e0e0e0;
+}
+
+.divider-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 600;
+  color: #333;
+  background-color: white;
+  padding: 0 10px;
+  white-space: nowrap;
 }
 
 /* 表格样式 */
