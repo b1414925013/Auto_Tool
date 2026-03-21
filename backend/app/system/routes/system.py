@@ -103,7 +103,8 @@ async def get_users(
         # 转换为 Pydantic 模型实例
         user_list.append(User.model_validate(user_dict))
     
-    return {"total": total, "items": user_list}
+    page = skip // limit + 1
+    return {"total": total, "items": user_list, "page": page, "page_size": limit}
 
 
 # 获取当前用户信息

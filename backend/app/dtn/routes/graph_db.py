@@ -63,7 +63,8 @@ async def get_graph_db(
         passwords = await GraphDBModel.all().offset(skip).limit(limit)
     # 将模型实例转换为 Pydantic 模型实例
     password_list = [GraphDB.model_validate(password) for password in passwords]
-    return {"total": total, "items": password_list}
+    page = skip // limit + 1
+    return {"total": total, "items": password_list, "page": page, "page_size": limit}
 
 
 # 根据 ID 获取图数据库密码

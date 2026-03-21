@@ -70,6 +70,7 @@ class PasswordRequest(BaseModel):
     include_lowercase: bool = True
     include_numbers: bool = True
     include_symbols: bool = True
+    count: int = 10
 
 
 # 文本哈希请求模型
@@ -126,6 +127,14 @@ async def get_dashboard_stats():
         # 获取图数据库密码数量
         graph_db_count = await GraphDB.all().count()
 
+        # 获取机机账号数量
+        from app.dtn.models.machine_account import MachineAccount
+        machine_account_count = await MachineAccount.all().count()
+
+        # 获取DIM数据库数量
+        from app.dim.models.dim_db import DimDB
+        dim_db_count = await DimDB.all().count()
+
         # 检查数据库连接状态
         db_connected = True
         try:
@@ -144,6 +153,8 @@ async def get_dashboard_stats():
             "data": {
                 "system_status": "运行正常",
                 "graph_db_count": graph_db_count,
+                "machine_account_count": machine_account_count,
+                "dim_db_count": dim_db_count,
                 "user_count": user_count,
                 "last_activity": current_time,
                 "db_connected": db_connected,
@@ -156,6 +167,8 @@ async def get_dashboard_stats():
             "data": {
                 "system_status": "异常",
                 "graph_db_count": 0,
+                "machine_account_count": 0,
+                "dim_db_count": 0,
                 "user_count": 0,
                 "last_activity": "-",
                 "db_connected": False,
@@ -332,11 +345,16 @@ async def timestamp_convert(request: TimestampRequest):
         result = {}
 
         if request.timestamp:
+            # 处理 13 位时间戳（毫秒）
+            timestamp = request.timestamp
+            if len(str(timestamp)) == 13:
+                timestamp = timestamp / 1000
             # 时间戳转日期时间
-            dt = DateTimeUtils.timestamp_to_datetime(request.timestamp)
+            dt = DateTimeUtils.timestamp_to_datetime(timestamp)
             result = {
-                "timestamp": request.timestamp,
                 "datetime": DateTimeUtils.format_datetime(dt),
+                "timestamp": int(DateTimeUtils.datetime_to_timestamp(dt)),
+                "milliseconds": DateTimeUtils.datetime_to_milliseconds(dt),
                 "iso": DateTimeUtils.to_iso_format(dt),
                 "utc": DateTimeUtils.to_iso_format(DateTimeUtils.now_utc()),
             }
@@ -351,7 +369,7 @@ async def timestamp_convert(request: TimestampRequest):
                 }
 
             result = {
-                "datetime": request.datetime,
+                "datetime": DateTimeUtils.format_datetime(dt),
                 "timestamp": int(DateTimeUtils.datetime_to_timestamp(dt)),
                 "milliseconds": DateTimeUtils.datetime_to_milliseconds(dt),
                 "iso": DateTimeUtils.to_iso_format(dt),
@@ -361,9 +379,9 @@ async def timestamp_convert(request: TimestampRequest):
             # 获取当前时间
             now = DateTimeUtils.now()
             result = {
-                "current_datetime": DateTimeUtils.format_datetime(now),
-                "current_timestamp": int(DateTimeUtils.datetime_to_timestamp(now)),
-                "current_milliseconds": DateTimeUtils.datetime_to_milliseconds(now),
+                "datetime": DateTimeUtils.format_datetime(now),
+                "timestamp": int(DateTimeUtils.datetime_to_timestamp(now)),
+                "milliseconds": DateTimeUtils.datetime_to_milliseconds(now),
                 "iso": DateTimeUtils.to_iso_format(now),
                 "utc": DateTimeUtils.to_iso_format(DateTimeUtils.now_utc()),
             }
@@ -453,11 +471,41 @@ async def url_tool(request: UrlRequest):
 
 
 # 随机密码生成接口
-@router.post("/password")
-async def password_generator(request: PasswordRequest):
+@router.get("/password")
+async def password_generator(length: int = 16, count: int = 10):
     """
     随机密码生成接口
-    生成指定长度和复杂度的随机密码
+    生成指定长度和数量的随机密码
+    """
+    try:
+        import string
+
+        # 验证参数
+        if length < 6 or length > 50:
+            return {"success": False, "error": "密码长度必须在6-50之间"}
+        
+        if count < 1 or count > 50:
+            return {"success": False, "error": "生成数量必须在1-50之间"}
+
+        # 构建字符集（默认包含所有类型）
+        charset = string.ascii_uppercase + string.ascii_lowercase + string.digits + string.punctuation
+
+        # 生成多个密码
+        passwords = []
+        for _ in range(count):
+            password = RandomUtil.randomStr(length, charset)
+            passwords.append(password)
+
+        return {"success": True, "passwords": passwords}
+    except Exception as e:
+        return {"success": False, "error": f"生成失败: {str(e)}"}
+
+# 随机密码生成接口（POST版本）
+@router.post("/password")
+async def password_generator_post(request: PasswordRequest):
+    """
+    随机密码生成接口（POST版本）
+    生成指定长度、复杂度和数量的随机密码
     """
     try:
         import string
@@ -465,6 +513,9 @@ async def password_generator(request: PasswordRequest):
         # 验证参数
         if request.length < 6 or request.length > 50:
             return {"success": False, "error": "密码长度必须在6-50之间"}
+        
+        if request.count < 1 or request.count > 50:
+            return {"success": False, "error": "生成数量必须在1-50之间"}
 
         # 构建字符集
         charset = ""
@@ -480,10 +531,18 @@ async def password_generator(request: PasswordRequest):
         if not charset:
             return {"success": False, "error": "至少需要选择一种字符类型"}
 
-        # 生成密码
-        password = RandomUtil.randomStr(request.length, charset)
+        # 生成多个密码
+        passwords = []
+        for _ in range(request.count):
+            password = RandomUtil.randomStr(request.length, charset)
+            passwords.append(password)
 
-        return {"success": True, "result": password}
+        # 确保返回正确的格式
+        return {
+            "success": True,
+            "passwords": passwords,
+            "count": len(passwords)# 保持向后兼容，返回第一个密码
+        }
     except Exception as e:
         return {"success": False, "error": f"生成失败: {str(e)}"}
 

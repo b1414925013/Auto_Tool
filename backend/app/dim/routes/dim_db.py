@@ -24,7 +24,8 @@ async def get_dim_db(
     passwords = await DimDBModel.all().offset(skip).limit(limit)
     # 将模型实例转换为 Pydantic 模型实例
     password_list = [DimDB.model_validate(password) for password in passwords]
-    return {"total": total, "items": password_list}
+    page = skip // limit + 1
+    return {"total": total, "items": password_list, "page": page, "page_size": limit}
 
 
 # 根据 ID 获取DIM数据库密码

@@ -21,7 +21,8 @@ async def get_roles(
     roles = await Role.all().offset(skip).limit(limit)
     # 将模型实例转换为 Pydantic 模型实例
     role_list = [RoleSchema.model_validate(role) for role in roles]
-    return {"total": total, "items": role_list}
+    page = skip // limit + 1
+    return {"total": total, "items": role_list, "page": page, "page_size": limit}
 
 
 # 根据ID获取角色

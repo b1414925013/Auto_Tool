@@ -25,7 +25,7 @@ const routes = [
       {
         path: 'graph-db',
         name: 'GraphDB',
-        component: () => import('../views/dtn/GraphDBPassword.vue')
+        component: () => import('../views/dtn/GraphDB.vue')
       },
       {
         path: 'machine-account',
@@ -77,6 +77,68 @@ const routes = [
         path: 'custom',
         name: 'CustomTools',
         component: () => import('../views/common/CustomTools.vue')
+      }
+    ]
+  },
+  {
+    path: '/tools',
+    name: 'Tools',
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'ip',
+        name: 'IpTool',
+        component: () => import('../views/common/tools/IpTool.vue')
+      },
+      {
+        path: 'password',
+        name: 'PasswordTool',
+        component: () => import('../views/common/tools/PasswordTool.vue')
+      },
+      {
+        path: 'json',
+        name: 'JsonTool',
+        component: () => import('../views/common/tools/JsonTool.vue')
+      },
+      {
+        path: 'timestamp',
+        name: 'TimestampTool',
+        component: () => import('../views/common/tools/TimestampTool.vue')
+      },
+      {
+        path: 'naming',
+        name: 'NamingTool',
+        component: () => import('../views/common/tools/NamingTool.vue')
+      },
+      {
+        path: 'base64',
+        name: 'Base64Tool',
+        component: () => import('../views/common/tools/Base64Tool.vue')
+      },
+      {
+        path: 'url',
+        name: 'UrlTool',
+        component: () => import('../views/common/tools/UrlTool.vue')
+      },
+      {
+        path: 'hash',
+        name: 'HashTool',
+        component: () => import('../views/common/tools/HashTool.vue')
+      },
+      {
+        path: 'color',
+        name: 'ColorTool',
+        component: () => import('../views/common/tools/ColorTool.vue')
+      },
+      {
+        path: 'python',
+        name: 'PythonDictTool',
+        component: () => import('../views/common/tools/PythonDictTool.vue')
+      },
+      {
+        path: 'jsonpath',
+        name: 'JsonPathTool',
+        component: () => import('../views/common/tools/JsonPathTool.vue')
       }
     ]
   },

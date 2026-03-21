@@ -1,10 +1,13 @@
 <template>
   <div class="machine-account-container">
-    <el-card class="machine-account-card">
+    <el-card class="tool-card">
       <template #header>
         <div class="card-header">
-          <h3>机机账号管理</h3>
-          <el-button type="primary" @click="handleAdd">
+          <div>
+            <h3>机机账号管理</h3>
+            <p class="card-description">管理和配置机机账号信息</p>
+          </div>
+          <el-button type="primary" @click="handleAdd" class="add-button">
             <el-icon><Plus /></el-icon>
             新增
           </el-button>
@@ -20,7 +23,7 @@
           @keyup.enter="handleSearch"
         >
           <template #append>
-            <el-button @click="handleSearch">
+            <el-button @click="handleSearch" class="search-button">
               <el-icon><Search /></el-icon>
             </el-button>
           </template>
@@ -28,33 +31,31 @@
       </div>
 
       <!-- 数据表格 -->
-      <el-table :data="machineAccountList" style="width: 100%" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="environment_id" label="环境编号" width="150" />
-        <el-table-column prop="ip" label="IP地址" width="150" />
-        <el-table-column prop="port" label="端口" width="100" />
-        <el-table-column prop="account" label="账号" width="150" />
-        <el-table-column prop="type" label="类型" width="100" />
-        <el-table-column prop="machine_account" label="机机账号" />
-        <el-table-column prop="machine_password" label="机机密码" />
-        <el-table-column label="创建时间" width="180">
+      <el-table :data="machineAccountList" style="width: 100%" class="machine-account-table">
+        <el-table-column prop="id" label="ID" min-width="80" />
+        <el-table-column prop="environment_id" label="环境编号" min-width="120" />
+        <el-table-column prop="ip" label="IP地址" min-width="120" />
+        <el-table-column prop="type" label="类型" min-width="80" />
+        <el-table-column prop="machine_account" label="机机账号" min-width="150" />
+        <el-table-column prop="machine_password" label="机机密码" min-width="150" />
+        <el-table-column label="创建时间" min-width="180">
           <template #default="scope">
             {{ formatDateTime(scope.row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="更新时间" width="180">
+        <el-table-column label="更新时间" min-width="180">
           <template #default="scope">
             {{ formatDateTime(scope.row.updated_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" min-width="120">
           <template #default="scope">
             <div class="operation-buttons">
-              <el-button type="primary" size="small" @click="handleEdit(scope.row)">
+              <el-button type="primary" size="small" @click="handleEdit(scope.row)" class="action-button">
                 <el-icon><Edit /></el-icon>
                 编辑
               </el-button>
-              <el-button type="danger" size="small" @click="handleDelete(scope.row.id)">
+              <el-button type="danger" size="small" @click="handleDelete(scope.row.id)" class="action-button">
                 <el-icon><Delete /></el-icon>
                 删除
               </el-button>
@@ -73,6 +74,7 @@
           :total="total"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
+          class="pagination"
         />
       </div>
     </el-card>
@@ -83,6 +85,7 @@
       :title="dialogTitle"
       width="600px"
       @close="handleDialogClose"
+      class="custom-dialog"
     >
       <el-form
         ref="formRef"
@@ -91,34 +94,34 @@
         label-width="120px"
       >
         <el-form-item label="环境编号" prop="environment_id">
-          <el-input v-model="formData.environment_id" placeholder="请输入环境编号" />
+          <el-input v-model="formData.environment_id" placeholder="请输入环境编号" class="form-input" />
         </el-form-item>
         <el-form-item label="IP地址" prop="ip">
-          <el-input v-model="formData.ip" placeholder="请输入IP地址" />
+          <el-input v-model="formData.ip" placeholder="请输入IP地址" class="form-input" />
         </el-form-item>
         <el-form-item label="端口" prop="port">
-          <el-input-number v-model="formData.port" :min="1" :max="65535" :step="1" />
+          <el-input-number v-model="formData.port" :min="1" :max="65535" :step="1" class="form-input-number" />
         </el-form-item>
         <el-form-item label="账号" prop="account">
-          <el-input v-model="formData.account" placeholder="请输入账号" />
+          <el-input v-model="formData.account" placeholder="请输入账号" class="form-input" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
-          <el-input v-model="formData.password" type="password" placeholder="请输入密码" />
+          <el-input v-model="formData.password" type="password" placeholder="请输入密码" class="form-input" />
         </el-form-item>
         <el-form-item label="类型" prop="type">
-          <el-input v-model="formData.type" placeholder="请输入类型" />
+          <el-input v-model="formData.type" placeholder="请输入类型" class="form-input" />
         </el-form-item>
         <el-form-item label="机机账号" prop="machine_account">
-          <el-input v-model="formData.machine_account" placeholder="请输入机机账号" />
+          <el-input v-model="formData.machine_account" placeholder="请输入机机账号" class="form-input" />
         </el-form-item>
         <el-form-item label="机机密码" prop="machine_password">
-          <el-input v-model="formData.machine_password" type="password" placeholder="请输入机机密码" />
+          <el-input v-model="formData.machine_password" type="password" placeholder="请输入机机密码" class="form-input" />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSave" :loading="loading">
+          <el-button @click="dialogVisible = false" class="cancel-button">取消</el-button>
+          <el-button type="primary" @click="handleSave" :loading="loading" class="save-button">
             保存
           </el-button>
         </span>
@@ -330,69 +333,259 @@ onMounted(() => {
 
 <style scoped>
 .machine-account-container {
-  padding: 20px 0;
-}
-
-.machine-account-card {
-  margin-bottom: 20px;
+  padding: var(--spacing-lg) 0;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+}
+
+.card-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.card-description {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: var(--font-weight-normal);
 }
 
 .search-box {
-  margin: 20px;
+  margin: var(--spacing-lg) var(--spacing-lg) 0;
 }
 
 .search-input {
   width: 400px;
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.search-button {
+  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+}
+
+.search-button:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.add-button {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  background-color: #667eea !important;
+  border: 1px solid #667eea !important;
+}
+
+.add-button:hover {
+  background-color: #5a6fd8 !important;
+  border-color: #5a6fd8 !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.machine-account-table {
+  margin: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.machine-account-table:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.machine-account-table :deep(.el-table__header-wrapper) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.machine-account-table :deep(.el-table th) {
+  background: transparent !important;
+  color: white !important;
+  font-weight: var(--font-weight-semibold);
+  border-bottom: none;
+  text-align: center;
+}
+
+.machine-account-table :deep(.el-table__body-wrapper) {
+  background: var(--background-color-light);
+}
+
+.machine-account-table :deep(.el-table tr) {
+  transition: all 0.3s ease;
+}
+
+.machine-account-table :deep(.el-table tr:hover) {
+  background-color: rgba(102, 126, 234, 0.05) !important;
+}
+
+.machine-account-table :deep(.el-table td) {
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .pagination-container {
-  margin: 20px;
+  margin: var(--spacing-lg);
   display: flex;
   justify-content: flex-end;
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
+.pagination {
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pagination :deep(.el-pagination__sizes),
+.pagination :deep(.el-pagination__jump) {
+  margin: 0 var(--spacing-md);
 }
 
 /* 操作按钮样式 */
 .operation-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   align-items: center;
 }
 
-/* 表格样式 */
-:deep(.el-table) {
-  margin: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.action-button {
+  transition: all 0.3s ease;
+  border-radius: var(--border-radius-sm);
 }
 
-:deep(.el-table__header-wrapper) {
-  background-color: #fafafa;
-  border-bottom: 1px solid #e0e0e0;
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-:deep(.el-table th) {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
+/* 对话框样式 */
+.custom-dialog :deep(.el-dialog__header) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
 }
 
-:deep(.el-table tr:hover) {
-  background-color: #f5f7fa !important;
+.custom-dialog :deep(.el-dialog__title) {
+  color: white !important;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
 }
 
-:deep(.el-table__row:nth-child(even)) {
-  background-color: #fafafa;
+.custom-dialog :deep(.el-dialog__headerbtn .el-icon-close) {
+  color: white !important;
+}
+
+/* 表单样式 */
+.form-input {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+}
+
+.form-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.form-input-number {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+}
+
+.form-input-number:focus-within {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid #f0f0f0;
+  margin-top: var(--spacing-lg);
+}
+
+.cancel-button {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.save-button {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  background-color: #667eea !important;
+  border: 1px solid #667eea !important;
+}
+
+.save-button:hover {
+  background-color: #5a6fd8 !important;
+  border-color: #5a6fd8 !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .machine-account-table {
+    margin: var(--spacing-md);
+  }
+  
+  .machine-account-table :deep(.el-table th),
+  .machine-account-table :deep(.el-table td) {
+    font-size: var(--font-size-sm);
+  }
+  
+  .operation-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .action-button {
+    font-size: var(--font-size-xs);
+    padding: 4px 8px;
+  }
+  
+  .pagination-container {
+    margin: var(--spacing-md);
+  }
+  
+  .custom-dialog {
+    width: 90% !important;
+  }
+  
+  .form-input,
+  .form-input-number {
+    width: 100%;
+  }
 }
 </style>

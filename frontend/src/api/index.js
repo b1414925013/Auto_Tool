@@ -94,7 +94,27 @@ const api = {
     create: (data) => apiClient.post('/role/roles', data),
     update: (id, data) => apiClient.put(`/role/roles/${id}`, data),
     delete: (id) => apiClient.delete(`/role/roles/${id}`)
+  },
+
+  // 公共工具
+  common: {
+    getPassword: (data) => apiClient.post('/common/password', data),
+    jsonTool: (data) => apiClient.post('/common/json', data),
+    base64Tool: (data) => apiClient.post('/common/base64', data),
+    urlTool: (data) => apiClient.post('/common/url', data),
+    timestampTool: (data) => apiClient.post('/common/timestamp', data),
+    hashTool: (data) => apiClient.post('/common/hash', data),
+    ipTool: (data) => apiClient.post('/common/ip', data),
+    colorTool: (data) => apiClient.post('/common/color', data),
+    namingTool: (data) => apiClient.post('/common/naming', data),
+    pythonDictToJson: (data) => apiClient.post('/common/python-dict-to-json', data),
+    jsonPathTool: (data) => apiClient.post('/common/jsonpath', data),
+    getDashboardStats: () => apiClient.get('/common/dashboard/stats'),
+    getOperationLogs: (params) => apiClient.get('/common/operation-logs', { params })
   }
 }
+
+// 导出 axios 实例，用于直接调用 API
+export { apiClient }
 
 export default api

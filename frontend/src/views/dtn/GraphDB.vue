@@ -1,10 +1,13 @@
 <template>
   <div class="graph-db-container">
-    <el-card class="graph-db-card">
+    <el-card class="tool-card">
       <template #header>
         <div class="card-header">
-          <h3>图数据库密码管理</h3>
-          <el-button type="primary" @click="handleAdd">
+          <div>
+            <h3>图数据库密码管理</h3>
+            <p class="card-description">管理和配置图数据库密码信息</p>
+          </div>
+          <el-button type="primary" @click="handleAdd" class="add-button">
             <el-icon><Plus /></el-icon>
             新增
           </el-button>
@@ -20,7 +23,7 @@
           @keyup.enter="handleSearch"
         >
           <template #append>
-            <el-button @click="handleSearch">
+            <el-button @click="handleSearch" class="search-button">
               <el-icon><Search /></el-icon>
             </el-button>
           </template>
@@ -28,29 +31,29 @@
       </div>
 
       <!-- 数据表格 -->
-      <el-table :data="graphDbList" style="width: 100%" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="environment_id" label="环境编号" width="150" />
-        <el-table-column prop="jump_server_ip" label="跳板机IP" width="150" />
-        <el-table-column prop="graph_db_password" label="图数据库密码" />
-        <el-table-column label="创建时间" width="180">
+      <el-table :data="graphDbList" style="width: 100%" class="graph-db-table">
+        <el-table-column prop="id" label="ID" min-width="80" />
+        <el-table-column prop="environment_id" label="环境编号" min-width="120" />
+        <el-table-column prop="jump_server_ip" label="跳板机IP" min-width="120" />
+        <el-table-column prop="graph_db_password" label="图数据库密码" min-width="200" />
+        <el-table-column label="创建时间" min-width="180">
           <template #default="scope">
             {{ formatDateTime(scope.row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="更新时间" width="180">
+        <el-table-column label="更新时间" min-width="180">
           <template #default="scope">
             {{ formatDateTime(scope.row.updated_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" min-width="120">
           <template #default="scope">
             <div class="operation-buttons">
-              <el-button type="primary" size="small" @click="handleEdit(scope.row)">
+              <el-button type="primary" size="small" @click="handleEdit(scope.row)" class="action-button">
                 <el-icon><Edit /></el-icon>
                 编辑
               </el-button>
-              <el-button type="danger" size="small" @click="handleDelete(scope.row.id)">
+              <el-button type="danger" size="small" @click="handleDelete(scope.row.id)" class="action-button">
                 <el-icon><Delete /></el-icon>
                 删除
               </el-button>
@@ -69,6 +72,7 @@
           :total="total"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
+          class="pagination"
         />
       </div>
     </el-card>
@@ -79,6 +83,7 @@
       :title="dialogTitle"
       width="650px"
       @close="handleDialogClose"
+      class="custom-dialog"
     >
       <el-form
         ref="formRef"
@@ -88,7 +93,7 @@
       >
         <!-- 环境编号部分 -->
         <el-form-item label="环境编号" prop="environment_id">
-          <el-input v-model="formData.environment_id" placeholder="请输入环境编号" />
+          <el-input v-model="formData.environment_id" placeholder="请输入环境编号" class="form-input" />
         </el-form-item>
         
         <!-- 分隔线 -->
@@ -99,16 +104,16 @@
         
         <!-- 跳板机相关信息 -->
         <el-form-item label="IP" prop="jump_server_ip">
-          <el-input v-model="formData.jump_server_ip" placeholder="请输入IP" />
+          <el-input v-model="formData.jump_server_ip" placeholder="请输入IP" class="form-input" />
         </el-form-item>
         <el-form-item label="端口" prop="jump_server_port">
-          <el-input-number v-model="formData.jump_server_port" :min="1" :max="65535" :step="1" />
+          <el-input-number v-model="formData.jump_server_port" :min="1" :max="65535" :step="1" class="form-input-number" />
         </el-form-item>
         <el-form-item label="账号" prop="jump_server_account">
-          <el-input v-model="formData.jump_server_account" placeholder="请输入账号" />
+          <el-input v-model="formData.jump_server_account" placeholder="请输入账号" class="form-input" />
         </el-form-item>
         <el-form-item label="密码" prop="jump_server_password">
-          <el-input v-model="formData.jump_server_password" type="password" placeholder="请输入密码" />
+          <el-input v-model="formData.jump_server_password" type="password" placeholder="请输入密码" class="form-input" />
         </el-form-item>
         
         <!-- 分隔线 -->
@@ -119,25 +124,25 @@
         
         <!-- pass-core相关信息 -->
         <el-form-item label="IP" prop="pass_core_ip">
-          <el-input v-model="formData.pass_core_ip" placeholder="请输入节点IP" />
+          <el-input v-model="formData.pass_core_ip" placeholder="请输入节点IP" class="form-input" />
         </el-form-item>
         <el-form-item label="端口" prop="pass_core_port">
-          <el-input-number v-model="formData.pass_core_port" :min="1" :max="65535" :step="1" />
+          <el-input-number v-model="formData.pass_core_port" :min="1" :max="65535" :step="1" class="form-input-number" />
         </el-form-item>
         <el-form-item label="账号" prop="pass_core_account">
-          <el-input v-model="formData.pass_core_account" placeholder="请输入节点账号" />
+          <el-input v-model="formData.pass_core_account" placeholder="请输入节点账号" class="form-input" />
         </el-form-item>
         <el-form-item label="密码" prop="pass_core_password">
-          <el-input v-model="formData.pass_core_password" type="password" placeholder="请输入节点密码" />
+          <el-input v-model="formData.pass_core_password" type="password" placeholder="请输入节点密码" class="form-input" />
         </el-form-item>
         <el-form-item label="Root密码" prop="pass_core_root_password">
-          <el-input v-model="formData.pass_core_root_password" type="password" placeholder="请输入节点Root密码" />
+          <el-input v-model="formData.pass_core_root_password" type="password" placeholder="请输入节点Root密码" class="form-input" />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSave" :loading="loading">
+          <el-button @click="dialogVisible = false" class="cancel-button">取消</el-button>
+          <el-button type="primary" @click="handleSave" :loading="loading" class="save-button">
             保存
           </el-button>
         </span>
@@ -366,50 +371,147 @@ onMounted(() => {
 
 <style scoped>
 .graph-db-container {
-  padding: 20px 0;
-}
-
-.graph-db-card {
-  margin-bottom: 20px;
+  padding: var(--spacing-lg) 0;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: var(--spacing-lg);
+}
+
+.card-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.card-description {
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: var(--font-weight-normal);
 }
 
 .search-box {
-  margin: 20px;
+  margin: var(--spacing-lg) var(--spacing-lg) 0;
 }
 
 .search-input {
   width: 400px;
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.search-button {
+  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+}
+
+.search-button:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.add-button {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  background-color: #667eea !important;
+  border: 1px solid #667eea !important;
+}
+
+.add-button:hover {
+  background-color: #5a6fd8 !important;
+  border-color: #5a6fd8 !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.graph-db-table {
+  margin: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.graph-db-table:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.graph-db-table :deep(.el-table__header-wrapper) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.graph-db-table :deep(.el-table th) {
+  background: transparent !important;
+  color: white !important;
+  font-weight: var(--font-weight-semibold);
+  border-bottom: none;
+  text-align: center;
+}
+
+.graph-db-table :deep(.el-table__body-wrapper) {
+  background: var(--background-color-light);
+}
+
+.graph-db-table :deep(.el-table tr) {
+  transition: all 0.3s ease;
+}
+
+.graph-db-table :deep(.el-table tr:hover) {
+  background-color: rgba(102, 126, 234, 0.05) !important;
+}
+
+.graph-db-table :deep(.el-table td) {
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .pagination-container {
-  margin: 20px;
+  margin: var(--spacing-lg);
   display: flex;
   justify-content: flex-end;
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
+.pagination {
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pagination :deep(.el-pagination__sizes),
+.pagination :deep(.el-pagination__jump) {
+  margin: 0 var(--spacing-md);
 }
 
 /* 操作按钮样式 */
 .operation-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-sm);
   align-items: center;
+}
+
+.action-button {
+  transition: all 0.3s ease;
+  border-radius: var(--border-radius-sm);
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 分隔线样式 */
 .divider-container {
   display: flex;
   align-items: center;
-  margin: 20px 0;
+  margin: var(--spacing-xl) 0;
   position: relative;
 }
 
@@ -423,37 +525,131 @@ onMounted(() => {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-weight: 600;
-  color: #333;
+  font-weight: var(--font-weight-semibold);
+  color: #667eea;
   background-color: white;
-  padding: 0 10px;
+  padding: 0 var(--spacing-md);
   white-space: nowrap;
+  font-size: var(--font-size-sm);
 }
 
-/* 表格样式 */
-:deep(.el-table) {
-  margin: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+/* 对话框样式 */
+.custom-dialog :deep(.el-dialog__header) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
 }
 
-:deep(.el-table__header-wrapper) {
-  background-color: #fafafa;
-  border-bottom: 1px solid #e0e0e0;
+.custom-dialog :deep(.el-dialog__title) {
+  color: white !important;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
 }
 
-:deep(.el-table th) {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
+.custom-dialog :deep(.el-dialog__headerbtn .el-icon-close) {
+  color: white !important;
 }
 
-:deep(.el-table tr:hover) {
-  background-color: #f5f7fa !important;
+/* 表单样式 */
+.form-input {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  width: 100%;
 }
 
-:deep(.el-table__row:nth-child(even)) {
-  background-color: #fafafa;
+.form-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.form-input-number {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+}
+
+.form-input-number:focus-within {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  border-color: #667eea;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid #f0f0f0;
+  margin-top: var(--spacing-lg);
+}
+
+.cancel-button {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.save-button {
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  background-color: #667eea !important;
+  border: 1px solid #667eea !important;
+}
+
+.save-button:hover {
+  background-color: #5a6fd8 !important;
+  border-color: #5a6fd8 !important;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .graph-db-table {
+    margin: var(--spacing-md);
+  }
+  
+  .graph-db-table :deep(.el-table th),
+  .graph-db-table :deep(.el-table td) {
+    font-size: var(--font-size-sm);
+  }
+  
+  .operation-buttons {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .action-button {
+    font-size: var(--font-size-xs);
+    padding: 4px 8px;
+  }
+  
+  .pagination-container {
+    margin: var(--spacing-md);
+  }
+  
+  .custom-dialog {
+    width: 90% !important;
+  }
+  
+  .form-input,
+  .form-input-number {
+    width: 100%;
+  }
 }
 </style>

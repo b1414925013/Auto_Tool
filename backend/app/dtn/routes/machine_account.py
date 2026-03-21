@@ -49,7 +49,8 @@ async def get_machine_accounts(
         accounts = await MachineAccountModel.all().offset(skip).limit(limit)
     # 将模型实例转换为 Pydantic 模型实例
     account_list = [MachineAccount.model_validate(account) for account in accounts]
-    return {"total": total, "items": account_list}
+    page = skip // limit + 1
+    return {"total": total, "items": account_list, "page": page, "page_size": limit}
 
 
 # 根据 ID 获取机机账号

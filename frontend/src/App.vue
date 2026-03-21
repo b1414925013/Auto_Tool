@@ -100,7 +100,12 @@
           >
             <el-icon><Menu /></el-icon>
           </el-button>
-          <h4 class="page-title">{{ pageTitle }}</h4>
+          <el-breadcrumb separator="/" class="breadcrumb">
+            <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item v-if="breadcrumbItems.length > 0" v-for="(item, index) in breadcrumbItems" :key="index" :to="{ path: item.path }">
+              {{ item.label }}
+            </el-breadcrumb-item>
+          </el-breadcrumb>
         </div>
         <div class="navbar-right">
           <span class="welcome-text">欢迎，{{ username }}</span>
@@ -128,8 +133,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { Menu } from '@element-plus/icons-vue'
 
 
 const router = useRouter()
@@ -146,7 +152,10 @@ const activeMenu = computed(() => {
 })
 
 // 页面标题
-const pageTitle = ref('Auto_Tool 后台管理系统')
+const pageTitle = ref('Auto_Tool')
+
+// 面包屑导航项
+const breadcrumbItems = ref([])
 
 // 用户名
 const username = ref('管理员')
@@ -156,6 +165,104 @@ const userRole = ref('normal_user')
 // 切换侧边栏
 const toggleSidebar = () => {
   isCollapse.value = !isCollapse.value
+}
+
+// 生成面包屑导航项
+const generateBreadcrumbItems = () => {
+  const path = route.path
+  const items = []
+  
+  // 根据路由路径生成面包屑导航项
+  const pathParts = path.split('/').filter(part => part)
+  let currentPath = ''
+  
+  for (const part of pathParts) {
+    currentPath += `/${part}`
+    
+    // 为每个路径部分添加对应的标签
+    let label = part
+    switch (currentPath) {
+      case '/dashboard':
+        label = '首页'
+        break
+      case '/dtn':
+        label = 'DTN'
+        break
+      case '/dtn/graph-db':
+        label = '图数据库'
+        break
+      case '/dtn/machine-account':
+        label = '机机账号'
+        break
+      case '/dim':
+        label = 'DIM'
+        break
+      case '/dim/database':
+        label = 'DIM数据库'
+        break
+      case '/system':
+        label = '系统管理'
+        break
+      case '/system/users':
+        label = '用户管理'
+        break
+      case '/system/roles':
+        label = '角色管理'
+        break
+      case '/common':
+        label = '公共工具'
+        break
+      case '/common/tools':
+        label = '工具列表'
+        break
+      case '/common/custom':
+        label = '自定义工具'
+        break
+      case '/tools':
+        label = '工具'
+        break
+      case '/tools/ip':
+        label = 'IP地址工具'
+        break
+      case '/tools/password':
+        label = '密码生成器'
+        break
+      case '/tools/json':
+        label = 'JSON工具'
+        break
+      case '/tools/timestamp':
+        label = '时间戳转换'
+        break
+      case '/tools/naming':
+        label = '命名转换工具'
+        break
+      case '/tools/base64':
+        label = 'Base64工具'
+        break
+      case '/tools/url':
+        label = 'URL工具'
+        break
+      case '/tools/hash':
+        label = '哈希工具'
+        break
+      case '/tools/color':
+        label = '颜色转换工具'
+        break
+      case '/tools/python':
+        label = 'Python字典转JSON'
+        break
+      case '/tools/jsonpath':
+        label = 'JSONPath工具'
+        break
+      default:
+        // 对于未明确指定的路径，使用路径部分作为标签
+        label = part
+    }
+    
+    items.push({ path: currentPath, label })
+  }
+  
+  breadcrumbItems.value = items
 }
 
 // 处理菜单选择
@@ -172,7 +279,15 @@ const handleMenuSelect = (key, keyPath) => {
     '/common/custom': '自定义工具'
   }
   pageTitle.value = titleMap[route.path] || 'Auto_Tool 后台管理系统'
+  
+  // 生成面包屑导航项
+  generateBreadcrumbItems()
 }
+
+// 监听路由变化，更新面包屑导航
+watch(() => route.path, () => {
+  generateBreadcrumbItems()
+}, { immediate: true }) // 立即执行一次
 
 // 退出登录
 const logout = () => {
@@ -549,22 +664,29 @@ body {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
-.page-title {
+.breadcrumb {
   margin: 0;
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-base);
   color: var(--text-color);
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
 }
 
-.page-title::after {
-  content: '';
-  width: 1px;
-  height: 20px;
-  background: var(--border-color);
-  margin-left: 20px;
+.breadcrumb :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary-color);
+}
+
+.breadcrumb :deep(.el-breadcrumb__inner) {
+  color: var(--text-color);
+  transition: var(--transition);
+}
+
+.breadcrumb :deep(.el-breadcrumb__inner:hover) {
+  color: var(--primary-color);
+}
+
+.breadcrumb :deep(.el-breadcrumb__separator) {
+  color: var(--text-color-light);
+  margin: 0 var(--spacing-sm);
 }
 
 .navbar-right {
@@ -802,16 +924,136 @@ body {
 .el-button {
   border-radius: var(--border-radius-md);
   transition: var(--transition);
+  font-weight: var(--font-weight-medium);
+  padding: 8px 16px;
 }
 
 .el-button--primary {
-  background-color: var(--primary-color) !important;
-  border-color: var(--primary-color) !important;
+  background-color: #667eea !important;
+  border-color: #667eea !important;
 }
 
 .el-button--primary:hover {
-  background-color: var(--primary-hover) !important;
-  border-color: var(--primary-hover) !important;
+  background-color: #5a6fd8 !important;
+  border-color: #5a6fd8 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.el-button--default:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 全局工具卡片样式 */
+.tool-card {
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.tool-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.tool-card .card-header {
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: var(--spacing-lg);
+  border-bottom: none;
+  display: block;
+}
+
+.tool-card .card-header h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+}
+
+.tool-card .card-header .card-description {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.tool-card .tool-content {
+  padding: var(--spacing-xl);
+  background-color: var(--background-color-light);
+}
+
+/* 结果区域样式 */
+.results-section {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid #e0e0e0;
+  animation: fadeIn 0.5s ease;
+}
+
+.results-section h4 {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+}
+
+.result-field-container {
+  position: relative;
+}
+
+.result-field {
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.copy-button {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  color: #667eea;
+  transition: all 0.3s ease;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+}
+
+.copy-button:hover {
+  color: #5a6fd8;
+  background-color: rgba(102, 126, 234, 0.1);
+}
+
+/* 动作按钮容器 */
+.action-buttons {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.action-button {
+  min-width: 80px;
+}
+
+/* 加载状态 */
+.el-button--loading {
+  opacity: 0.8;
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 表单样式 */

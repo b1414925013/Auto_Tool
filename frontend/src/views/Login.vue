@@ -174,7 +174,7 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
   font-family: var(--font-family);
@@ -330,13 +330,13 @@ const handleLogin = async () => {
 }
 
 :deep(.el-input) {
-  border-radius: 8px;
-  transition: var(--transition);
-  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
 }
 
 :deep(.el-input:focus-within) {
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   border-color: var(--primary-color);
 }
 
@@ -351,12 +351,12 @@ const handleLogin = async () => {
   font-size: 16px;
   font-weight: 500;
   border-radius: var(--border-radius-md);
-  background-color: var(--primary-color) !important;
-  border: none;
-  transition: var(--transition);
+  background-color: #667eea !important;
+  border: 1px solid #667eea !important;
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  color: var(--white) !important;
+  color: white !important;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -368,9 +368,10 @@ const handleLogin = async () => {
 }
 
 .el-button.login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-  background-color: var(--primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background-color: #5a6fd8 !important;
+  border-color: #5a6fd8 !important;
 }
 
 .el-button.login-btn::before {
@@ -389,10 +390,12 @@ const handleLogin = async () => {
 }
 
 .el-button.login-btn:disabled {
-  background: var(--info-color) !important;
+  background: #667eea !important;
+  border-color: #667eea !important;
   transform: none;
   box-shadow: none;
-  color: #ffffff !important;
+  color: white !important;
+  opacity: 0.6;
 }
 
 /* 响应式设计 */
